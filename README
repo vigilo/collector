@@ -1,0 +1,14 @@
+This is the README for the Collector plugin.
+
+Collector is usually launched by Nagios, returns its results using SpoolMe
+and StoreMe. It takes its parameters from a configuration file, given the
+following arguments as command line:
+  Collector -l $LIB_DIR -p $BASE_DIR -H $HOST_NAME
+By default, $LIB_DIR is /usr/lib/vigilo-collector
+
+It will look for a host configuration file named $BASE_DIR/$HOST_NAME.pm
+
+See Collector internal documentation for more help
+
+perldoc ./Collector
+

@@ -1,0 +1,1116 @@
+#!/usr/bin/perl -w
+################################################################################
+## $Id$
+##
+## Collector :  Nagios script which collects informations from hosts
+#		in one pass
+## Copyright (C) 2000-2005 CS-SI
+##
+## This program is free software; you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 2 of the License, or
+## (at your option) any later version.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program; if not, write to the Free Software
+## Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#################################################################################
+
+=head1 Collector
+
+=head2 Overview
+
+This is a Nagios Plugin intended to monitor and host using SNMP.
+
+This collector is compliant with ePN, which produces less overhead than
+if it was a fork'ed plugin. So enable ePN in your Nagios configuration
+to have a maximum benefit of this plugin.
+
+Collector is supposed to be run once for each host and to retrive all supervision
+data in a one-shot process.
+
+Configuration files are of two kinds:
+
+=over 2
+
+=item Host configuration: gives a list of what to collect, what function to apply
+to what data, what threshold to set, what Nagios passive services and RRD
+to route results to
+
+=item Function library: describes the logical processing of the results by
+implementing several functions (that are referenced into the Host configuration
+files.
+
+=back
+
+=head2 Host Configuration file example
+
+  # This is an Host configuration file extract
+
+  use strict;
+  use warnings;
+  package host;
+  our %Host = (
+      sup => {services => { },},
+      IPAddress     => "127.0.0.1",
+      hostname      => "pifpafpouf",
+      snmp          => { port => 161, snmpOIDsPerPDU => 10, version => 2, communityString => 'public'},
+      storeMe       => { IPAddress => "127.0.0.1", port => 50001, },
+      spoolMe       => { IPAddress => "127.0.0.1", port => 50000, },
+      metro         => { DS => [ ] }
+  );
+
+  push @{$Host{metro}{DS}},{output => "root_partition", reRouteFor => undef, function => "m_table_mult", parameters => ['/'] , variables =>  ['WALK/.1.3.6.1.2.1.25.2.3.1.4', 'WALK/.1.3.6.1.2.1.25.2.3.1.6', 'WALK/.1.3.6.1.2.1.25.2.3.1.3']}; # / part
+  p
+
+  $Host{sup}{services}{"1 min Load"}={reRouteFor => undef, function => "simple_factor", parameters => [10, 20, 0.01, 'Load : %2.2f'] , variables => ['GET/.1.3.6.1.4.1.2021.10.1.5.1'] };
+
+
+=head2 Functions file example
+
+  # This is a Functions configuration extract
+
+  package Functions;
+  use strict;
+  use warnings;
+  use Data::Dumper;
+  require Exporter;
+  use vars qw(@ISA @EXPORT $VERSION);
+  @ISA=qw(Exporter);
+  @EXPORT= qw( %Functions %Primitive );
+  $VERSION = 1.0;
+
+  # These primitive are shared code that might be used by several
+  # Functions
+
+  our %Primitive = (
+  "checkOIDVal"   => sub {
+      # checks whether the value returned by an SNMP GET or WALKS seems correct
+      my $val = shift;
+      return 0 unless defined $val;
+      return ($val =~ /noSuch(Object|Instance)|endOfMibView|NULL/ ? 0 : 1)
+  },
+  "isOutOfBounds" => sub {
+      # checks if a value fits is out the "Nagios standard Threshold range"
+      # see http://nagiosplug.sourceforge.net/developer-guidelines.html#THRESHOLDFORMAT
+      my ($value,$st)=@_;
+      my $inside=( ($st =~ /^@/) ? 1 : 0 );
+      $st =~ s/^@//;
+      $st=":" if ($st eq "");
+      if ( $st =~ /:/)
+      { # two limits have been given
+          my ($low,$upp)=split(/:/,$st);
+          return $inside if (! $low && ! $upp);
+          return ($inside ? $value <= $upp : $value > $upp) ? 1 : 0 if ($low =~ /^~?$/);
+          return ($inside ? $value >= $low : $value < $low) ? 1 : 0 if($upp eq "" );
+          return -1 if($low>$upp);
+          return( $inside ? ($value >= $low && $value <= $upp) : ($value > $upp || $value < $low) ) ? 1 : 0;
+      }
+      return ($value >= 0 && $value <= $st) ? 1 : 0 if $inside;
+      return ($value < 0 || $value > $st) ? 1 : 0;
+  },
+  "thresholdIt" => sub {
+      # checks the correctness of the given value, with the warn and crit thresholds
+      # see http://nagiosplug.sourceforge.net/developer-guidelines.html#THRESHOLDFORMAT for thresholds syntax
+      my ($value,$warnThresh,$critThresh,$caption,$Primitive)=@_;
+      $caption=$caption || "%s";
+      return("CRITICAL", sprintf("CRITICAL: $caption", $value))   if ($Primitive->{"isOutOfBounds"}->($value, $critThresh));
+      return("WARNING",  sprintf("WARNING: $caption",   $value))  if ($Primitive->{"isOutOfBounds"}->($value, $warnThresh));
+      return('OK',       sprintf("OK: $caption",       $value));
+  },
+  "lookupMultiple" => sub {
+      # looks for a given pattern in an OID subtree
+      # which is supposed to be one-level deep
+      # pattern can be a portion of a regexp
+      # returns the list of indexes matching
+      my ($response,$where,$key)=@_;
+      my @indexes;
+      foreach my $OID (keys %{$response})
+      {
+          if ($OID =~ /^$where\./)
+          {
+              if ($response->{$OID} =~ /^${key}\000?$/)
+              {
+                  $OID =~ /\.(\d+)$/; # Got it
+                  push @indexes,$1;
+              }
+          }
+      }
+      return @indexes;
+  },
+  );
+
+  # This is the main hashmap that will be exported and used by Collector.
+  our %Functions = (
+  "simple_factor" => sub {
+      my ($parameters, $variables, $response, $debug, $Primitive)=@_;
+
+      my $OID         = (split('/',$variables->[0]))[1];
+      my $warnThresh  = $parameters->[0];
+      my $critThresh  = $parameters->[1];
+      my $factor      = $parameters->[2];
+      my $caption     = $parameters->[3] || "%s";
+
+      my $value       = $response->{$OID};
+      return ("UNKNOWN","UNKNOWN: OID $OID not found") unless $Primitive->{"checkOIDVal"}->($value);
+      return $Primitive->{"thresholdIt"}->($value*$factor,$warnThresh,$critThresh,$caption, $Primitive);
+  },
+  "m_table_mult"      => sub {
+      my ($parameters, $variables, $response, $debug, $Primitive)=@_;
+
+      my $name    = $parameters->[0];
+      my $val1OID     = (split('/',$variables->[0]))[1];
+      my $val2OID     = (split('/',$variables->[1]))[1];
+      my $descrOID    = (split('/',$variables->[2]))[1];
+
+      # Get the indexes
+      my @indexes = $Primitive->{"lookupMultiple"}->($response,$descrOID,$name);
+      return ("UNKNOWN","U") if ($#indexes == -1);
+      my $total=0;
+      my $val1;
+      my $val2;
+      foreach my $index (@indexes)
+      {
+          $val1=$response->{"$val1OID.$index"};
+          $val2=$response->{"$val2OID.$index"};
+          return ("UNKNOWN","U") unless $Primitive->{"checkOIDVal"}->($val1);
+          return ("UNKNOWN","U") unless $Primitive->{"checkOIDVal"}->($val2);
+          $total += $val1 * $val2;
+      }
+      return ('OK', $total);
+  }
+  );
+  1;
+
+=cut
+
+package collector;
+
+use POSIX;
+use strict;
+use lib "/usr/lib/nagios/plugins" ;
+use utils qw($TIMEOUT %ERRORS &print_revision &support);
+
+use Net::SNMP;
+use Getopt::Long;
+&Getopt::Long::config('bundling');
+
+# Temporaire
+use Data::Dumper;
+############
+
+my $PROGNAME = "Collector";
+sub print_help ();
+sub usage ();
+sub process_arguments ();
+sub supServicesHashRef ;
+sub storeMeHashRef ;
+sub snmpWalk($);
+#sub verifySNMPIdent;
+
+my $status;
+my ($opt_V, $opt_h, $opt_H, $opt_d, $conf);
+our ($lib, $path, $timeout, $use_nsca, $sendnscacfg);
+
+my $state = "UNKNOWN";
+my $answer = "";
+
+my %snmpOIDs4Get;
+my %snmpOIDs4Walk;
+my @snmpOIDs4Get;
+my @snmpOIDs4Walk;
+my @snmpoids;
+# Net::SNMP message size. Default is 1472, but it does not cope with big
+# tables. We set it higher. References:
+# http://search.cpan.org/~dtown/Net-SNMP-5.2.0/lib/Net/SNMP.pm
+# http://nagios.manubulon.com/faq.html#FAQ9
+# http://www.cpanforum.com/posts/848
+my $maxmsgsize = 2000;
+my ($session, $error, $response);
+
+my $debug = 0;
+
+### Validate Arguments
+
+$status = process_arguments();
+
+## Load the main configuration file
+do $conf;
+
+if ((!defined $timeout) || ($timeout == 0)) {
+    $timeout = $TIMEOUT;
+}
+
+if (! $path) {
+    print "Provide a pathname for the configuration files directory\n";
+    exit $ERRORS{'UNKNOWN'};
+} elsif (! -x $path) {
+    print "Provide an existing conf path: $path\n";
+    exit $ERRORS{'UNKNOWN'};
+}
+
+if (! $lib) {
+    print "Provide a pathname for the library directory\n";
+    exit $ERRORS{'UNKNOWN'};
+} elsif (! -x $lib) {
+    print "Provide an existing library path: $lib\n";
+    exit $ERRORS{'UNKNOWN'};
+}
+
+# Load the libs
+require "$lib/base.pm";
+require "$lib/sup.pm";
+require "$lib/metro.pm";
+if (-d "$lib/ext") {
+    opendir(LIBDIR, "$lib/ext") or die "can't opendir $lib/ext: $!";
+    my $file;
+    while (defined($file = readdir(LIBDIR))) {
+        if ($file =~ /\.pm$/) {
+            #print "Loading $lib/ext/$file...\n";
+            require "$lib/ext/$file";
+        }
+    }
+    closedir(LIBDIR);
+}
+
+
+#Read the right host configuration file
+#$opt_H =~ s/_/-/g;
+#$opt_H =~ s/\./-/g;
+eval {require "$path/$opt_H.pm";} ||
+	die "'$path/$opt_H.pm' isn't present\n";
+#print Dumper(\%host::Host);
+
+# Just in case of problems, let's not hang Nagios
+$SIG{'ALRM'} = sub {
+     print ("CRITICAL: No response (timeout)\n");
+     exit $ERRORS{"CRITICAL"};
+};
+
+alarm($timeout);
+
+#Get all SNMP OIDs for this host
+&getAllOIDs();
+
+&verifySNMPIdent;
+&getOIDValues;
+
+print Dumper $response if ($debug);
+
+if (&send2Sup != 0) {
+	$answer = "UNKNOWN : problem in send2Sup function\n";
+	$state = "UNKNOWN";
+	print $answer;
+	exit($ERRORS{$state});
+}
+if (&send2StoreMe != 0) {
+	$answer = "UNKNOWN : problem in send2SpoolMe function\n";
+	$state = "UNKNOWN";
+	print $answer;
+	exit($ERRORS{$state});
+}
+
+###############
+
+$state = 'OK';
+$answer = "OK: Collector OK\n";
+
+print "$answer";
+exit $ERRORS{$state};
+
+
+### subroutines
+
+=head2 usage()
+
+=head3 Overview
+
+Gives Usage and License message.
+
+=head3 Arguments
+
+None
+
+=head3 Returns
+
+Nothing
+
+=cut
+
+sub usage() {
+  printf "\nMissing arguments!\n";
+  printf "\n";
+  printf "usage: \n";
+  printf "Collector \n";
+  printf "Copyright (C) 2006-2009 CS-SI\n";
+  printf "Collector comes with ABSOLUTELY NO WARRANTY\n";
+  printf "This programm is licensed under the terms of the ";
+  printf "GNU General Public License\n(check source code for details)\n";
+  printf "\n\n";
+  exit $ERRORS{"UNKNOWN"};
+}
+
+=head2 print_help()
+
+=head3 Overview
+
+Display a command line arguments help
+
+=head3 Arguments
+
+None
+
+=head3 Returns
+
+Nothing
+
+=cut
+
+sub print_help() {
+	printf "Nagios script which collects informations from hosts\n";
+  	printf "in one pass\n";
+	printf "\nUsage:\n";
+	printf "   -V (--version)    Plugin version\n";
+	printf "   -H (--hostname)   Hostname\n";
+	printf "   -C (--conf)       Config file (defaults to /etc/vigilo-collector/general.conf)\n";
+	printf "   -h (--help)       usage help \n\n";
+	printf "   -d (--debug)      debug \n\n";
+	print_revision($PROGNAME, '$Revision$');
+}
+
+
+=head2 process_arguments
+
+=head3 Overview
+
+Handles, and verify the command line arguments and sets the global variables:
+
+=over 2
+
+=item $opt_V: print version
+
+=item $opt_h: print help
+
+=item $opt_d: print debug
+
+=item $opt_H: hostname to query
+
+=back
+
+Load the arguments from @_
+
+=head3 Arguments
+
+None
+
+=head3 Returns
+
+None
+
+=cut
+
+sub process_arguments() {
+	$status = GetOptions(
+			"V"   => \$opt_V, "version"    => \$opt_V,
+			"h"   => \$opt_h, "help"       => \$opt_h,
+			"d"   => \$opt_d, "debug"      => \$opt_d,
+			"H=s" => \$opt_H, "hostname=s" => \$opt_H,
+			"C=s" => \$conf,  "conf=s"     => \$conf,
+			);
+
+
+	if ($status == 0){
+		print_help();
+		exit $ERRORS{'OK'};
+	}
+  
+	if ($opt_V) {
+		print_revision($PROGNAME,'$Revision$ ');
+		exit $ERRORS{'OK'};
+	}
+
+	if ($opt_h) {
+		print_help();
+		exit $ERRORS{'OK'};
+	}
+
+	if ($opt_d) {
+		$debug = 1;
+	}
+
+
+	if (! $opt_H) {
+		# FIXME : Verify the hostname structure
+		print "Provides a hostname\n";
+		exit $ERRORS{'UNKNOWN'};
+	}
+
+	unless (defined $conf) {
+		$conf = "/etc/vigilo-collector/general.conf";
+	}
+}
+
+=head2 getAllOIDs
+
+=head3 OverView
+
+Builds up a list of all SNMP OIDs that will need to be gathered, either
+by SNMP GETs or WALKs.
+
+Uses the @snmpOIDs4Get and @snmpOIDs4Walk arrays to write the final lists 
+
+=head3 Arguments
+
+None
+
+=head3 Returns
+
+None
+
+=cut
+
+sub getAllOIDs {
+	# get OIDs from services' sup
+	foreach my $v_service (values %{&supServicesHashRef}) {
+		for (my $i=0; $i <= $#{$v_service->{'variables'}}; $i++) {
+			if ($v_service->{'variables'}->[$i] =~ /^(GET|WALK)\/((\.\d+)+)$/) {
+				$snmpOIDs4Get{$2}++ if ($1 eq 'GET');
+				$snmpOIDs4Walk{$2}++ if ($1 eq 'WALK') ;
+			}
+		}
+	}
+	# get OIDs from DS' metro
+	my $hashRefTmp;
+	for (my $i=0; $i <= $#{&metroDSArrayRef}; $i++) {
+		$hashRefTmp = &metroDSArrayRef()->[$i]->{'variables'};
+		for (my $j=0; $j<=$#{$hashRefTmp}; $j++) {
+			if ($hashRefTmp->[$j] =~ /^(GET|WALK)\/((\.\d+)+)$/) {
+				$snmpOIDs4Get{$2}++ if ($1 eq 'GET');
+				$snmpOIDs4Walk{$2}++ if ($1 eq 'WALK') ;
+			}
+		}
+	}
+	# We put all oids in a HashMap before, because we want have only once each OID
+	@snmpOIDs4Get = keys %snmpOIDs4Get;
+	@snmpOIDs4Walk = keys %snmpOIDs4Walk;
+}
+
+=head2 verifySNMPIdent
+
+=head3 Overview
+
+Opens an SNMP session using the good protocol and credentials
+
+Uses the $Host:Host hashref to know what kind of SNMP to use.
+
+Stores the open session into $session global variable
+
+=head3 Arguments
+
+None
+
+=head3 Returns
+
+None, but exits if something failed.
+
+=cut
+
+sub verifySNMPIdent {
+	my ($auth, $priv);
+	if ($host::Host{'snmp'}->{'version'} == 3) {
+		# Must define a security level even though default is noAuthNoPriv
+		# v3 requires a security username
+		if (defined $host::Host{'snmp'}->{'seclevel'} 
+			&& defined $host::Host{'snmp'}->{'secname'}) {
+		
+			# Must define a security level even though defualt is noAuthNoPriv
+			unless ($host::Host{'snmp'}->{'seclevel'} =~ /^(noAuthNoPriv|authNoPriv|authPriv)$/ ) {
+				usage();
+				exit $ERRORS{"UNKNOWN"};
+			}
+			
+			# Authentication wanted
+			if ($host::Host{'snmp'}->{'seclevel'} =~ /(authNoPriv|authPriv)/ ) {
+		
+				unless ($host::Host{'snmp'}->{'authproto'} =~ /(MD5|SHA1)/ ) {
+					usage();
+					exit $ERRORS{"UNKNOWN"};
+				}
+
+				if ( !defined $host::Host{'snmp'}->{'authpass'}) {
+					usage();
+					exit $ERRORS{"UNKNOWN"};
+				}else{
+					if ($host::Host{'snmp'}->{'authpass'} =~ /^0x/ ) {
+						$auth = "-authkey => $host::Host{'snmp'}->{'authpass'}" ;
+					}else{
+						$auth = "-authpassword => '$host::Host{'snmp'}->{'authpass'}'";
+					}
+				}
+					
+			}
+			
+			# Privacy (DES encryption) wanted
+			if ($host::Host{'snmp'}->{'seclevel'} eq  'authPriv' ) {
+				if (! defined $host::Host{'snmp'}->{'privpass'}) {
+					usage();
+					exit $ERRORS{"UNKNOWN"};
+				}else{
+					if ($host::Host{'snmp'}->{'privpass'} =~ /^0x/){
+						$priv = "-privkey => $host::Host{'snmp'}->{'privpass'}";
+					}else{
+						$priv = "-privpassword => $host::Host{'snmp'}->{'privpass'}";
+					}
+				}
+			}
+
+			# Context name defined or default
+
+			unless ( defined $host::Host{'snmp'}->{'context'}) {
+				$host::Host{'snmp'}->{'context'} = "";
+			}
+		
+		
+		
+		}else {
+					usage();
+					exit $ERRORS{'UNKNOWN'}; ;
+		}
+	} # end snmpv3
+
+
+	if ( $host::Host{'snmp'}->{'version'} =~ /[12]/ ) {
+  	($session, $error) = Net::SNMP->session(
+			-hostname   => $host::Host{'IPAddress'},
+			-community  => $host::Host{'snmp'}->{'communityString'},
+			-port       => $host::Host{'snmp'}->{'port'},
+			-version    => $host::Host{'snmp'}->{'version'},
+			-maxmsgsize => $maxmsgsize
+		);
+
+		if (!defined($session)) {
+			$state='UNKNOWN';
+			$answer=$error;
+			print ("$state: $answer");
+			exit $ERRORS{$state};
+		}
+	
+	}elsif ( $host::Host{'snmp'}->{'version'} == 3 ) {
+
+		if ($host::Host{'snmp'}->{'seclevel'} eq 'noAuthNoPriv') {
+			($session, $error) = Net::SNMP->session(
+				-hostname  => $host::Host{'IPAddress'},
+				-port      => $host::Host{'snmp'}->{'port'},
+				-version  => $host::Host{'snmp'}->{'version'},
+				-username => $host::Host{'snmp'}->{'secname'},
+			);
+
+		}elsif ( $host::Host{'snmp'}->{'seclevel'} eq 'authNoPriv' ) {
+			($session, $error) = Net::SNMP->session(
+				-hostname  => $host::Host{'IPAddress'},
+				-port      => $host::Host{'snmp'}->{'port'},
+				-version  => $host::Host{'snmp'}->{'version'},
+				-username => $host::Host{'snmp'}->{'secname'},
+				#$auth,
+				-authpassword => $host::Host{'snmp'}->{'authpass'}, 
+				-authprotocol => $host::Host{'snmp'}->{'authproto'},
+			);	
+		}elsif ($host::Host{'snmp'}->{'seclevel'} eq 'authPriv' ) {
+			($session, $error) = Net::SNMP->session(
+				-hostname  => $host::Host{'snmp'}->{'IPAddress'},
+				-port      => $host::Host{'snmp'}->{'port'},
+				-version  => $host::Host{'snmp'}->{'version'},
+				-username => $host::Host{'snmp'}->{'secname'},
+				$auth,
+				-authprotocol => $host::Host{'snmp'}->{'authproto'},
+				$priv
+			);
+		}
+					
+					
+		if (!defined($session)) {
+					$state='UNKNOWN';
+					$answer=$error;
+					print ("$state: $answer");
+					exit $ERRORS{$state};
+		}
+
+	}else{
+		$state='UNKNOWN';
+		print ("$state: No support for SNMP v".$host::Host{'snmp'}->{'version'}." yet\n");
+		exit $ERRORS{$state};
+	}
+}
+
+=head2 getOIDValues
+
+=head3 OverView
+
+Perform all SNMP gets and walk
+
+Uses the $Host:Host global variable to use the SNMP version as defined into
+the configuration file.
+
+Uses @snmpOIDs4Get as a list of items to retrieve by using SNMP get/bulkget.
+
+Uses @snmpOIDs4Walk as a list of items to retrieve by SNMP walking the MIB.
+
+Uses $response to write results into.
+
+=head3 Arguments
+
+None
+
+=head3 Returns
+
+0 if sucessfull, exits hardly otherwise
+
+=cut
+
+sub getOIDValues
+{
+	## Get OIDs for SNMPGet
+	my $responseGetOIDs;
+	if (@snmpOIDs4Get) {
+		if (&snmpOIDsPerPDU < $#snmpOIDs4Get) {
+			my @snmpOIDs4GetTMP;
+			my $responseGetOIDsTMP;
+			for (my $i=0; $i<=$#snmpOIDs4Get ; ) {
+				@snmpOIDs4GetTMP = ();
+				print "DEBUG GET TABLE : i = $i et msgPerPDU = ".&snmpOIDsPerPDU."ALL Get : $#snmpOIDs4Get\n" if ($debug);
+				for ( my $j=0; $i <= $#snmpOIDs4Get and $j < &snmpOIDsPerPDU ; $i++, $j++) {
+					push (@snmpOIDs4GetTMP,$snmpOIDs4Get[$i]);
+				}
+				print Dumper \@snmpOIDs4GetTMP if ($debug);
+				if (!defined($responseGetOIDsTMP = $session->get_request(-varbindlist => \@snmpOIDs4GetTMP))) {
+      					$answer=$session->error;
+      					$session->close;
+					print "WARNING2: SNMP error: $answer\n";
+					exit $ERRORS{'WARNING'};
+				}
+				if ($responseGetOIDs) {
+					%$responseGetOIDs = (%$responseGetOIDs, %$responseGetOIDsTMP) if ($responseGetOIDsTMP);
+				} else {
+					%$responseGetOIDs = %$responseGetOIDsTMP;
+				}
+			}
+		} else {
+			if (!defined($responseGetOIDs = $session->get_request(-varbindlist => \@snmpOIDs4Get))) {
+      				$answer=$session->error;
+      				$session->close;
+				print "WARNING2: SNMP error: $answer\n";
+			exit $ERRORS{'WARNING'};
+			}
+		}
+	}
+	my $responseWalkOIDs;
+	if (@snmpOIDs4Walk) {
+		# Get OIDs from SNMPWalk
+		$responseWalkOIDs = &snmpWalk(\@snmpOIDs4Walk);
+	}
+	# Merge hashes
+	if (defined %{$responseWalkOIDs}) {
+		if (defined %{$responseGetOIDs}) {
+			%{$response} = (%{$responseGetOIDs}, %{$responseWalkOIDs});
+		} else {
+			%{$response} = %{$responseWalkOIDs};
+		}
+	} elsif (defined %{$responseGetOIDs}) {
+		%{$response} = %{$responseGetOIDs};
+	} else {
+		$state = 'UNKNOWN';
+		$answer = 'No OID to collect';
+		print "$answer\n";
+		exit $ERRORS{$state};
+	}
+	return 0;
+}
+
+=head2 snmpWalk($)
+
+=head3 OverView
+
+Perform an SNMP Walk.
+
+Uses the $Host:Host global variable to use the SNMP version as defined into
+the configuration file.
+
+=head3 Arguments
+
+=over 2
+
+=item $1: $OIDs, reference to an array of OIDs to walk through.
+
+=back
+
+=head3 Returns
+
+A hashmap of the gatheres (OID, value) items.
+
+=cut
+
+sub snmpWalk($)
+{
+	
+	my $OIDs = shift;
+	my @args;
+	my %returnTmp;
+	for (my $i=0; $i <= $#{$OIDs}; $i++) {
+		if ($host::Host{'snmp'}->{'version'} == 1) {
+			@args = (-varbindlist => [$OIDs->[$i]]);
+            my $oid;
+			while (defined($session->get_next_request(@args))) {
+				$oid = ($session->var_bind_names())[0];
+                if (!Net::SNMP::oid_base_match($OIDs->[$i], $oid)) { last; }
+                $returnTmp{$oid} = $session->var_bind_list()->{$oid};
+                @args = (-varbindlist => [$oid]);
+			}
+		} else {
+			@args = (-maxrepetitions => &snmpOIDsPerPDU, -varbindlist => [$OIDs->[$i]]);
+			outer: while (defined($session->get_bulk_request(@args))) {
+				my @oids = Net::SNMP::oid_lex_sort(keys(%{$session->var_bind_list()}));
+				foreach (@oids) {
+					if (!Net::SNMP::oid_base_match($OIDs->[$i], $_)) { last outer; }
+							$returnTmp{$_} = $session->var_bind_list()->{$_};
+					# Make sure we have not hit the end of the MIB
+							if ($session->var_bind_list()->{$_} eq 'endOfMibView') { last outer; } 
+				}
+					# Get the last OBJECT IDENTIFIER in the returned list
+					@args = (-maxrepetitions => &snmpOIDsPerPDU, -varbindlist => [pop(@oids)]);
+			}
+		}
+	}
+	return \%returnTmp;
+}
+
+=head2 send2StoreMe
+
+=head3 Overview
+
+Walk throught the defined Data Sources (DSs), apply the metrology functions
+to the received SNMP responses from host, compute the final values and sends
+to a StoreMe Server the results
+
+Uses the $Hosts::Host hashmap, the Function::Function hashmap to
+get the parameters to send to the functions and the functions references
+themself, as they are dynamically defined by configuration
+
+=head3 Arguments
+
+None
+
+=head3 Returns
+
+0
+
+=cut
+
+sub send2StoreMe
+{
+	use IO::Socket::INET;
+
+
+	my $header = $opt_H.";".time().";";
+	my $now = time();
+	my @hostResults;
+	my ($dish,$msg_tmp);
+	my $DSList = &metroDSArrayRef;
+	my $port;
+	my $server;
+	my $sock;
+	my @oneShotList;
+	for (my $i=0; $i<=$#{$DSList}; $i++)
+	{
+		($dish,$msg_tmp) = 
+			$Functions::Functions{$DSList->[$i]->{'function'}}->($DSList->[$i]->{'parameters'}
+					, $DSList->[$i]->{'variables'}
+					, $response, $debug, \%Functions::Primitive
+					);
+		$msg_tmp="U" if !defined $msg_tmp;
+		if ($DSList->[$i]->{'reRouteFor'})
+		{
+			$server = $DSList->[$i]->{'reRouteFor'}->{'server'};
+			$port = $DSList->[$i]->{'reRouteFor'}->{'port'};
+		}
+		else
+		{
+			$port = &storeMeHashRef->{'port'};
+			$server = &storeMeHashRef->{'IPAddress'};
+		}
+		my $message;
+		if ($DSList->[$i]->{'output'})
+		{
+			$message = $DSList->[$i]->{'output'}.";$now;$msg_tmp" ;
+			if (! ($sock = IO::Socket::INET->new( PeerPort => $port , PeerAddr => $server, Proto => 'udp')))
+			{
+				print "CRITICAL: problem to open an UDP socket in send2StoreMe\n";
+				exit $ERRORS{'CRITICAL'};
+			}
+			$sock->send("$message\n");
+			print "send2StoreMe: $message\n" if ($debug);
+			$sock->close();
+		}
+		else
+		{
+			push @oneShotList, $msg_tmp;
+		}
+	}
+	if ($#oneShotList > 1)
+	{
+		$port = &storeMeHashRef->{'port'};
+		$server = &storeMeHashRef->{'IPAddress'};
+		if (! ($sock = IO::Socket::INET->new( PeerPort => $port , PeerAddr => $server, Proto => 'udp')))
+		{
+			print "CRITICAL: problem to open an UDP socket in send2StoreMe\n";
+			exit $ERRORS{'CRITICAL'};
+		}
+		my $message = "$opt_H;$now;".join(":",@oneShotList);
+		$sock->send("$message\n");
+		print "send2StoreMe: $message\n" if ($debug);
+		$sock->close();
+	}
+	return (0);
+}
+
+=head2 send2Sup
+
+=head3 Overview
+
+Walk throught the defined passive services, apply the supervision functions
+to the received SNMP responses from host, compute the final Nagios-like states
+(OK, WARNING, CRITICAL, UNKNOWN…) and returns the hasmap with the values
+Uses then send2SpoolMe or send2Nsca to forward the result to the right daemon.
+
+Uses the $Hosts::Host hashmap, the Function::Function hashmap to
+get the parameters to send to the functions and the functions references
+themself, as they are dynamically defined by configuration
+
+=head3 Arguments
+
+None
+
+=head3 Returns
+
+0
+
+=cut
+
+sub send2Sup
+{
+	use IO::Socket::INET;
+
+    my $hostName;
+    my $port;
+    my $service;
+    my $server;
+    my $now = time;
+    my $result;
+    my $results = {};
+
+	# Loops over all monitoring services to get the service's state and its output (answer)
+	foreach my $k_service (keys %{&supServicesHashRef()})
+    {
+        my ($state, $answer) = 
+            $Functions::Functions{
+                &supServicesHashRef()->{$k_service}->{'function'}}->(&supServicesHashRef()->{$k_service}->{'parameters'}
+                        ,&supServicesHashRef()->{$k_service}->{'variables'}
+                        ,$response,$debug,\%Functions::Primitive
+                        );
+        if (&supServicesHashRef()->{$k_service}->{'reRouteFor'})
+        {
+            $server = &supServicesHashRef()->{$k_service}->{'reRouteFor'}->{'server'};
+            $port = &supServicesHashRef()->{$k_service}->{'reRouteFor'}->{'port'};
+            $service = &supServicesHashRef()->{$k_service}->{'reRouteFor'}->{'service'};
+            $hostName = &supServicesHashRef()->{$k_service}->{'reRouteFor'}->{'host'};
+        }
+        else
+        {
+            $server = $host::Host{'spoolMe'}->{'IPAddress'};
+            $port = $host::Host{'spoolMe'}->{'port'};
+            $hostName = $host::Host{'hostname'};
+            $service = $k_service;
+        }
+        $result = {
+                         server => $server,
+                         port => $port,
+                         host_name => $hostName,
+                         svc_description => $service,
+                         return_code => $ERRORS{$state},
+                         plugin_output => $answer,
+                     };
+        # index by server for send_nsca
+        if (!defined $results->{$server})
+        {
+            $results->{$server} = ();
+        }
+        push (@{$results->{$server}}, $result);
+    }
+    if ($use_nsca)
+    {
+        #print Dumper $results;
+        foreach my $srv (keys %{$results})
+        {
+            # TODO: replace with this: http://search.cpan.org/~MOCONNOR/Nagios-NSCA/ ?
+            open(SENDNSCA, "|send_nsca -c $sendnscacfg -H $srv >/dev/null") or die "Can't start send_nsca";
+            my $messages = "";
+            foreach my $res (@{$results->{$srv}})
+            {
+                $messages = $messages . $res->{host_name} . "\t" . $res->{svc_description} . "\t"
+                            . $res->{return_code} . "\t" .$res->{plugin_output} . "\n";
+            }
+            #print Dumper $messages;
+            print SENDNSCA $messages;
+            close(SENDNSCA);
+        }
+    }
+    else
+    {
+        foreach my $msgs (values %{$results})
+        {
+            foreach my $res (@{$msgs})
+            {
+                &send2SpoolMe($res);
+            }
+        }
+    }
+	return (0);
+}
+
+=head2 send2SpoolMe
+
+=head3 Overview
+
+Sends the results to a SpoolMe server
+
+=head3 Arguments
+
+=over 2
+
+=item Destination server name
+
+=item Destination port
+
+=item Result hasmap, for example:
+        {
+                host_name => 'www',
+                svc_description => 'database',
+                return_code => '0',
+                plugin_output => 'Database is OK',
+        };
+
+=back
+
+=head3 Returns
+
+0
+
+=cut
+
+sub send2SpoolMe($)
+{
+	use IO::Socket::INET;
+
+	my $result = shift;
+
+    my $now = time;
+    my $sock;
+
+    if (! ($sock = IO::Socket::INET->new( PeerPort => $result->{port} , PeerAddr => $result->{server}, Proto => 'udp')))
+    {
+        print "CRITICAL: problem to open an UDP socket in send2SpoolMe\n";
+        exit $ERRORS{'CRITICAL'};
+    }
+    my $message = "[$now] PROCESS_SERVICE_CHECK_RESULT;".$result->{host_name}
+                 .";".$result->{svc_description}.";".$result->{return_code}
+                 .";".$result->{plugin_output}."\n";
+    $sock->send($message);
+    print "send2SpoolMe on $result->{server}: $message" if ($debug);
+    $sock->close();
+	return (0);
+}
+
+=head2 supServicesHashRef
+
+=head3 Overview
+
+Simple wrapper to help access a global variable
+
+=head3 Arguments
+
+None
+
+=head3 Returns
+
+The reference to the array of all sevices that are to handle (passively) for this host.
+
+=cut
+
+sub supServicesHashRef {
+	return $host::Host{'sup'}->{'services'};
+}
+
+=head2 supServicesHashRef
+
+=head3 Overview
+
+Simple wrapper to help access a global variable
+
+=head3 Arguments
+
+None
+
+=head3 Returns
+
+The reference to the array of all DS that are to handle for this host.
+
+=cut
+
+sub metroDSArrayRef {
+	return $host::Host{'metro'}->{'DS'};
+}
+
+=head2 supServicesHashRef
+
+=head3 Overview
+
+Simple wrapper to help access a global variable
+
+=head3 Arguments
+
+None
+
+=head3 Returns
+
+The reference to the hashmap describing the server where to send (remotely) the data to store to RRD.
+{ IPAddress => "hostname.domainname.or.ip", port => 50001, }
+
+=cut
+
+sub storeMeHashRef {
+	return $host::Host{'storeMe'};
+}
+
+=head2 supServicesHashRef
+
+=head3 Overview
+
+Simple wrapper to help access a global variable
+
+=head3 Arguments
+
+None
+
+=head3 Returns
+
+The number of OID that are to send in the same Protocol Data Unit
+
+=cut
+
+sub snmpOIDsPerPDU {
+	return $host::Host{'snmp'}->{'snmpOIDsPerPDU'};
+}

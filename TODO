@@ -1,0 +1,2 @@
+- test with http://search.cpan.org/~MOCONNOR/Nagios-NSCA/ instead of calling
+  the send_nsca binary

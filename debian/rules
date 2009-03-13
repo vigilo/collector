@@ -1,0 +1,58 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+build:
+
+clean:
+	dh_testdir
+	dh_testroot
+	dh_clean 
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k 
+	dh_installdirs
+	$(MAKE) install DESTDIR=$(CURDIR)/debian/nagios-plugin-collector
+
+
+
+# Build architecture-independent files here.
+binary-indep: install
+	dh_testdir
+	dh_testroot
+#	dh_installchangelogs 
+	dh_installdocs $(CURDIR)/README
+#	dh_installexamples
+#	dh_install
+#	dh_installmenu
+#	dh_installdebconf	
+#	dh_installlogrotate
+#	dh_installemacsen
+#	dh_installpam
+#	dh_installmime
+#	dh_python
+#	dh_installinit
+#	dh_installcron
+#	dh_installinfo
+#	dh_installman
+#	dh_link
+#	dh_strip
+#	dh_compress
+	dh_fixperms
+	dh_perl
+#	dh_makeshlibs
+	dh_installdeb
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+# Build architecture-dependent files here.
+binary-arch: install
+
+binary: binary-indep
+.PHONY: clean binary-indep binary-arch binary install build

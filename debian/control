@@ -1,0 +1,14 @@
+Source: nagios-plugin-collector
+Section: vigilo
+Priority: extra
+Maintainer: Aurélien BOMPARD <aurelien.bompard@c-s.fr>
+Build-Depends: debhelper (>= 5)
+Standards-Version: 3.7.2
+
+Package: nagios-plugin-collector
+Architecture: all
+Depends: nagios2 | nagios3, ${perl:Depends}, libnet-snmp-perl, libcrypt-des-perl, libdigest-hmac-perl, libdigest-sha1-perl
+Recommends: nsca
+Description: Centralized collector plugin for Nagios
+ This plugin collects the SNMP data once and forwards it
+ to an UDP port. Its configuration needs to be generated
