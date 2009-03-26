@@ -6,7 +6,7 @@ Name:		%{name}
 Summary:	Centralized collector plugin for Nagios
 Version:	%{version}
 Release:	%{release}
-Source0:	Collector.tar.bz2
+Source0:	collector.tar.bz2
 
 Group:		System/Servers
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-build
@@ -27,6 +27,7 @@ This application is part of the Vigilo Project <http://vigilo-project.org>
 %prep
 %setup -q -n collector
 
+%build
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -41,7 +42,7 @@ rm -rf $RPM_BUILD_ROOT
 %doc COPYING
 #%doc %{_datadir}/docs/*
 %{_libdir}/*
-%{_sysconfdir}/*
+%config(noreplace) %{_sysconfdir}/*
 #%_datadir/%{name}
 
 
