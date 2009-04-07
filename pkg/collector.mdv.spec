@@ -38,11 +38,9 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%doc COPYING README TODO host.example
-#%doc %{_datadir}/docs/*
+%doc COPYING README README.fr TODO host.example
 %{_libdir}/*
 %config(noreplace) %{_sysconfdir}/*
-#%_datadir/%{name}
 
 
 %changelog
