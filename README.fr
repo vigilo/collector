@@ -1,0 +1,20 @@
+Fichier "Lisez-Moi" du plugin Collector.
+
+Le Collector est généralement lancé par Nagios, et retourne ses résultats par
+SpoolMe ou NSCA (dans le cas des tests de disponibilité) et StoreMe (dans le
+cas des données de performance).
+
+Il y a deux options à la ligne de commande :
+ * -C : le chemin vers le fichier de configuration général (par défaut /etc/vigilo-collector/general.conf)
+ * -H : le nom de machine ou l'adresse IP à tester
+
+Le fichier general.conf contient des paramètres supplémentaires, tels que le
+chemin vers les fichiers de configuration spécifiques à chaque hôte. Ces
+fichiers sont censés être générés par VigiConf, mais un exemple est fourni dans
+le fichier "host.example".
+
+Voir la documentation interne du Collector pour plus d'informations :
+    perldoc ./Collector
+
+La dernière version de la documentation est disponible sur le site web Vigilo :
+    http://www.projet-vigilo.org
