@@ -1,22 +1,21 @@
-%define	name	nagios-plugin-collector
-%define	version	1.5
+%define name    nagios-plugin-collector
+%define version 1.5
 %define release 1
 
-Name:		%{name}
-Summary:	Centralized collector plugin for Nagios
-Version:	%{version}
-Release:	%{release}
-Source0:	collector.tar.bz2
-
+Name:       %{name}
+Summary:    Centralized collector plugin for Nagios
+Version:    %{version}
+Release:    %{release}
+Source0:    collector.tar.bz2
 URL:        http://www.projet-vigilo.org
-Group:		System/Servers
-BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-build
-License:	GPLv2
-Requires:	perl-Crypt-DES
-Requires:	perl-Net-SNMP
-Requires:	perl-Digest-HMAC
-Requires:	perl-Digest-SHA1
-Buildarch:	noarch
+Group:      System/Servers
+BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-build
+License:    GPLv2
+Requires:   perl-Crypt-DES
+Requires:   perl-Net-SNMP
+Requires:   perl-Digest-HMAC
+Requires:   perl-Digest-SHA1
+Buildarch:  noarch
 
 %description
 This plugin collects the SNMP data once and forwards it to an UDP port. Its
