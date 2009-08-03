@@ -1,6 +1,7 @@
-%define name    nagios-plugin-collector
+%define module  collector
+%define name    vigilo-%{module}
 %define version 1.5
-%define release 1
+%define release 2
 
 Name:       %{name}
 Summary:    Centralized collector plugin for Nagios
@@ -17,13 +18,17 @@ Requires:   perl-Digest-HMAC
 Requires:   perl-Digest-SHA1
 Buildarch:  noarch
 
+# Renamed from nagios-plugin-collector
+Obsoletes:  nagios-plugin-collector < 1.5-2
+Provides:   nagios-plugin-collector = %{version}-%{release}
+
 %description
 This plugin collects the SNMP data once and forwards it to an UDP port. Its
 configuration needs to be generated.
 This application is part of the Vigilo Project <http://vigilo-project.org>
 
 %prep
-%setup -q -n collector
+%setup -q -n %{module}
 
 %build
 
@@ -43,5 +48,8 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Thu Jul 30 2009 Aurelien Bompard <aurelien.bompard@c-s.fr> - 1.5-2
+- rename
+
 * Fri Mar 20 2009  Thomas Burguiere <thomas.burguiere@c-s.fr> - 1.5-1
 - first creation of the RPM from debian archive
