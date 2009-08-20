@@ -11,5 +11,7 @@ install:
 	mkdir $(DESTDIR)$(CLIBDIR)/ext
 	find $(DESTDIR)$(CLIBDIR) -type d -name .svn -exec rm -rf {} \;
 
+tests:
+	@true
 
-.PHONY: install
+.PHONY: install tests
