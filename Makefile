@@ -14,4 +14,7 @@ install:
 tests:
 	@true
 
-.PHONY: install tests
+clean:
+	@true
+
+.PHONY: install tests clean
