@@ -1,12 +1,17 @@
-NLIBDIR = /usr/lib/nagios/plugins
-CLIBDIR = /usr/lib/vigilo-collector
+LIBDIR = /usr/lib
+NLIBDIR = $(LIBDIR)/nagios/plugins
+CLIBDIR = $(LIBDIR)/vigilo-collector
 CONFDIR = /etc/vigilo-collector
 DESTDIR =
 
 install:
 	-mkdir -p $(DESTDIR)$(NLIBDIR) $(DESTDIR)$(CLIBDIR) $(DESTDIR)$(CONFDIR)
-	install -p -m 755 Collector $(DESTDIR)$(NLIBDIR)/Collector
-	install -p -m 644 general.conf $(DESTDIR)$(CONFDIR)/general.conf
+	sed -e 's,@NAGIOS_PLUGINS_DIR@,$(NLIBDIR),g' Collector.in > $(DESTDIR)$(NLIBDIR)/Collector
+	chmod 755 $(DESTDIR)$(NLIBDIR)/Collector
+	touch --reference Collector.in $(DESTDIR)$(NLIBDIR)/Collector
+	sed -e 's,@LIBDIR@,$(LIBDIR),g' general.conf.in > $(DESTDIR)$(CONFDIR)/general.conf
+	chmod 644 $(DESTDIR)$(CONFDIR)/general.conf
+	touch --reference general.conf.in $(DESTDIR)$(CONFDIR)/general.conf
 	cp -pr lib/* $(DESTDIR)$(CLIBDIR)/
 	mkdir $(DESTDIR)$(CLIBDIR)/ext
 	find $(DESTDIR)$(CLIBDIR) -type d -name .svn -exec rm -rf {} \;

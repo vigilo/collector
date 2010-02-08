@@ -16,6 +16,7 @@ Requires:   perl-Crypt-DES
 Requires:   perl-Net-SNMP
 Requires:   perl-Digest-HMAC
 Requires:   perl-Digest-SHA1
+Requires:   nagios
 Buildarch:  noarch
 
 # Renamed from nagios-plugin-collector
@@ -34,7 +35,7 @@ This application is part of the Vigilo Project <http://vigilo-project.org>
 
 %install
 rm -rf $RPM_BUILD_ROOT
-make install DESTDIR=$RPM_BUILD_ROOT  
+make install DESTDIR=$RPM_BUILD_ROOT LIBDIR=%{_libdir}
 
 
 %clean
@@ -43,7 +44,8 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root)
 %doc COPYING README README.fr TODO host.example
-%{_libdir}/*
+%{_libdir}/%{name}
+%{_libdir}/nagios/plugins/*
 %config(noreplace) %{_sysconfdir}/*
 
 

@@ -1,4 +1,4 @@
-$lib = "/usr/lib/vigilo-collector";
+$lib = "@LIBDIR@/vigilo-collector";
 $path = "/etc/vigilo-vigiconf/prod/collector";
 $timeout = 0;
 $use_nsca = 0;

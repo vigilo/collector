@@ -193,7 +193,7 @@ package collector;
 
 use POSIX;
 use strict;
-use lib "/usr/lib/nagios/plugins" ;
+use lib "@NAGIOS_PLUGINS_DIR@" ;
 use utils qw($TIMEOUT %ERRORS &print_revision &support);
 
 use Net::SNMP;
