@@ -377,7 +377,7 @@ sub print_help() {
 	printf "\nUsage:\n";
 	printf "   -V (--version)    Plugin version\n";
 	printf "   -H (--hostname)   Hostname\n";
-	printf "   -C (--conf)       Config file (defaults to /etc/vigilo-collector/general.conf)\n";
+	printf "   -C (--conf)       Config file (defaults to @CONFDIR@/general.conf)\n";
 	printf "   -h (--help)       usage help \n\n";
 	printf "   -d (--debug)      debug \n\n";
 	print_revision($PROGNAME, '$Revision$');
@@ -451,7 +451,7 @@ sub process_arguments() {
 	}
 
 	unless (defined $conf) {
-		$conf = "/etc/vigilo-collector/general.conf";
+		$conf = "@CONFDIR@/general.conf";
 	}
 }
 
