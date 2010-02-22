@@ -1,7 +1,7 @@
 %define module  collector
 %define name    vigilo-%{module}
-%define version 1.5
-%define release 2
+%define version 1.6
+%define release 1
 
 Name:       %{name}
 Summary:    Centralized collector plugin for Nagios
@@ -33,6 +33,7 @@ This application is part of the Vigilo Project <http://vigilo-project.org>
 %setup -q -n %{module}
 
 %build
+make
 
 %install
 rm -rf $RPM_BUILD_ROOT
