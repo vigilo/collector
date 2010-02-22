@@ -16,6 +16,7 @@ Requires:   perl-Crypt-DES
 Requires:   perl-Net-SNMP
 Requires:   perl-Digest-HMAC
 Requires:   perl-Digest-SHA1
+Requires:   perl-Nagios-Cmd
 Requires:   nagios
 Buildarch:  noarch
 
