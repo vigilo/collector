@@ -61,8 +61,6 @@ files.
       IPAddress     => "127.0.0.1",
       hostname      => "pifpafpouf",
       snmp          => { port => 161, snmpOIDsPerPDU => 10, version => 2, communityString => 'public'},
-      storeMe       => { IPAddress => "127.0.0.1", port => 50001, },
-      spoolMe       => { IPAddress => "127.0.0.1", port => 50000, },
       metro         => { DS => [ ] }
   );
 
@@ -210,7 +208,6 @@ sub print_help ();
 sub usage ();
 sub process_arguments ();
 sub supServicesHashRef ;
-sub storeMeHashRef ;
 sub snmpWalk($);
 #sub verifySNMPIdent;
 
@@ -783,13 +780,13 @@ sub snmpWalk($)
     return \%returnTmp;
 }
 
-=head2 send2StoreMe
+=head2 send2Metro
 
 =head3 Overview
 
 Walk throught the defined Data Sources (DSs), apply the metrology functions
 to the received SNMP responses from host, compute the final values and sends
-to a StoreMe Server the results
+the results to the bus.
 
 Uses the $Hosts::Host hashmap, the Function::Function hashmap to
 get the parameters to send to the functions and the functions references
@@ -852,7 +849,7 @@ sub send2Metro
 Walk throught the defined passive services, apply the supervision functions
 to the received SNMP responses from host, compute the final Nagios-like states
 (OK, WARNING, CRITICAL, UNKNOWN…) and returns the hasmap with the values
-Uses then send2SpoolMe or send2Nsca to forward the result to the right daemon.
+Uses then send2NagiosCmd or send2Nsca to forward the result to the right daemon.
 
 Uses the $Hosts::Host hashmap, the Function::Function hashmap to
 get the parameters to send to the functions and the functions references
@@ -899,8 +896,6 @@ sub send2Sup
         }
         else
         {
-            #$server = $host::Host{'spoolMe'}->{'IPAddress'};
-            #$port = $host::Host{'spoolMe'}->{'port'};
             $remote = 0;
             $hostName = $host::Host{'hostname'};
             $service = $k_service;
@@ -953,7 +948,7 @@ sub send2NagiosCmd($)
 
     $nagios_cmd->nagios_cmd("PROCESS_FILE;".$tmpfn.";1");
 
-    print "send2NagiosCmp: $tmpfn\n" if ($debug);
+    print "send2NagiosCmd: $tmpfn\n" if ($debug);
     return (0);
 }
 
@@ -985,58 +980,6 @@ sub send2RemoteNagios($)
 }
 
 
-=head2 send2SpoolMe
-
-=head3 Overview
-
-Sends the results to a SpoolMe server
-
-=head3 Arguments
-
-=over 2
-
-=item Destination server name
-
-=item Destination port
-
-=item Result hasmap, for example:
-        {
-                host_name => 'www',
-                svc_description => 'database',
-                return_code => '0',
-                plugin_output => 'Database is OK',
-        };
-
-=back
-
-=head3 Returns
-
-0
-
-=cut
-
-sub send2SpoolMe($)
-{
-    use IO::Socket::INET;
-
-    my $result = shift;
-
-    my $now = time;
-    my $sock;
-
-    if (! ($sock = IO::Socket::INET->new( PeerPort => $result->{port} , PeerAddr => $result->{server}, Proto => 'udp')))
-    {
-        print "CRITICAL: problem to open an UDP socket in send2SpoolMe\n";
-        exit $ERRORS{'CRITICAL'};
-    }
-    my $message = "[$now] PROCESS_SERVICE_CHECK_RESULT;".$result->{host_name}
-                 .";".$result->{svc_description}.";".$result->{return_code}
-                 .";".$result->{plugin_output}."\n";
-    $sock->send($message);
-    print "send2SpoolMe on $result->{server}: $message" if ($debug);
-    $sock->close();
-    return (0);
-}
 
 =head2 supServicesHashRef
 
@@ -1078,26 +1021,6 @@ sub metroDSArrayRef {
     return $host::Host{'metro'}->{'DS'};
 }
 
-=head2 supServicesHashRef
-
-=head3 Overview
-
-Simple wrapper to help access a global variable
-
-=head3 Arguments
-
-None
-
-=head3 Returns
-
-The reference to the hashmap describing the server where to send (remotely) the data to store to RRD.
-{ IPAddress => "hostname.domainname.or.ip", port => 50001, }
-
-=cut
-
-sub storeMeHashRef {
-    return $host::Host{'storeMe'};
-}
 
 =head2 supServicesHashRef
 
