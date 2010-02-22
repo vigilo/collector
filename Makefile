@@ -2,6 +2,7 @@ LIBDIR = /usr/lib
 NLIBDIR = $(LIBDIR)/nagios/plugins
 CLIBDIR = $(LIBDIR)/vigilo-collector
 SYSCONFDIR = /etc
+LOCALSTATEDIR = /var
 CONFDIR = $(SYSCONFDIR)/vigilo/collector
 DESTDIR =
 
