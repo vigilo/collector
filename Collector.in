@@ -946,7 +946,7 @@ sub send2NagiosCmd($)
     }
     close($tmpfh);
 
-    $nagios_cmd->nagios_cmd("PROCESS_FILE;".$tmpfn.";1");
+    $nagios_cmd->nagios_cmd("[$now] PROCESS_FILE;".$tmpfn.";1");
 
     print "send2NagiosCmd: $tmpfn\n" if ($debug);
     return (0);
