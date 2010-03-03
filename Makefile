@@ -10,10 +10,10 @@ INFILES = Collector general.conf
 
 build: $(INFILES)
 
-Collector:
+Collector: Collector.in
 	sed -e 's,@NAGIOS_PLUGINS_DIR@,$(NLIBDIR),g;s,@CONFDIR@,$(CONFDIR),g' \
 		Collector.in > Collector
-general.conf:
+general.conf: general.conf.in
 	sed -e 's,@LIBDIR@,$(LIBDIR),g;s,@SYSCONFDIR@,$(SYSCONFDIR),g;s,@LOCALSTATEDIR@,$(LOCALSTATEDIR),g' \
 		general.conf.in > general.conf
 
