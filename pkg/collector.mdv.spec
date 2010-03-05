@@ -1,7 +1,7 @@
 %define module  collector
 %define name    vigilo-%{module}
-%define version 1.6
-%define release 1
+%define version 1.7
+%define release 1%{?svn}
 
 Name:       %{name}
 Summary:    Centralized collector plugin for Nagios
@@ -59,6 +59,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Fri Mar 05 2010 Aurelien Bompard <aurelien.bompard@c-s.fr>
+- new release
+
 * Thu Jul 30 2009 Aurelien Bompard <aurelien.bompard@c-s.fr> - 1.5-2
 - rename
 
