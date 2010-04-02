@@ -1,6 +1,6 @@
 %define module  collector
 %define name    vigilo-%{module}
-%define version 1.7
+%define version 2.0.0
 %define release 1%{?svn}
 
 Name:       %{name}
