@@ -39,6 +39,7 @@ $Functions{thresholds_OID_simple} = sub {
     my $warnThresh = $parameters->[0];
     my $critThresh = $parameters->[1];
     my $caption    = $parameters->[2] || "%s";
+    return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $OID") unless exists($response->{$OID});
 
     my $value      = $response->{$OID};
     return ("UNKNOWN","UNKNOWN: OID $OID not found") unless $Primitive->{"checkOIDVal"}->($value);
@@ -49,6 +50,9 @@ $Functions{thresholds_OID_plus_max} = sub {
 
     my $OID        = (split('/',$variables->[0]))[1];
     my $maxOID     = (split('/',$variables->[1]))[1];
+    return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $OID") unless exists($response->{$OID});
+    return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $maxOID") unless exists($response->{$maxOID});
+
     my $value      = $response->{$OID};
     my $maxValue   = $response->{$maxOID};
     my $warnThresh = $parameters->[0];
@@ -64,6 +68,9 @@ $Functions{thresholds_mult} = sub {
 
     my $OID1       = (split('/',$variables->[0]))[1];
     my $OID2       = (split('/',$variables->[1]))[1];
+    return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $OID1") unless exists($response->{$OID1});
+    return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $OID2") unless exists($response->{$OID2});
+
     my $val1       = $response->{$OID1};
     my $val2       = $response->{$OID2};
     my $warnThresh = $parameters->[0];
@@ -100,6 +107,7 @@ $Functions{table} = sub {
     # Get the index
     my $index = $Primitive->{"lookup"}->($response,$descrOID,$name);
     return ("UNKNOWN","UNKNOWN: $name not found in $descrOID") if ($index == -1);
+    return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $OID.$index") unless exists($response->{"$OID.$index"});
     my $value=$response->{"$OID.$index"};
     return ("UNKNOWN","UNKNOWN: OID $OID.$index not found") unless $Primitive->{"checkOIDVal"}->($value);
     return $Primitive->{"thresholdIt"}->($value, $warnThresh, $critThresh, $caption, $Primitive);
@@ -118,6 +126,7 @@ $Functions{table_factor} = sub {
     # Get the index
     my $index = $Primitive->{"lookup"}->($response,$descrOID,$name);
     return ("UNKNOWN","UNKNOWN: $name not found in $descrOID") if ($index == -1);
+    return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $OID.$index") unless exists($response->{"$OID.$index"});
     my $value=$response->{"$OID.$index"};
     return ("UNKNOWN","UNKNOWN: OID $OID.$index not found") unless $Primitive->{"checkOIDVal"}->($value);
     return $Primitive->{"thresholdIt"}->($value * $factor, $warnThresh, $critThresh, $caption, $Primitive);
@@ -136,6 +145,8 @@ $Functions{table_mult} = sub {
     # Get the index
     my $index = $Primitive->{"lookup"}->($response,$descrOID,$name);
     return ("UNKNOWN","UNKNOWN: $name not found in $descrOID") if ($index == -1);
+    return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $val1OID.$index") unless exists($response->{"$val1OID.$index"});
+    return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $val2OID.$index") unless exists($response->{"$val2OID.$index"});
     my $val1=$response->{"$val1OID.$index"};
     my $val2=$response->{"$val2OID.$index"};
     return ("UNKNOWN","UNKNOWN: OID $val1OID.$index not found") unless $Primitive->{"checkOIDVal"}->($val1);
@@ -156,6 +167,8 @@ $Functions{table_used_free} = sub {
     # Get the index
     my $index = $Primitive->{"lookup"}->($response,$descrOID,$name);
     return ("UNKNOWN","UNKNOWN: $name not found in $descrOID") if ($index == -1);
+    return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $usedOID.$index") unless exists($response->{"$usedOID.$index"});
+    return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $freeOID.$index") unless exists($response->{"$freeOID.$index"});
     my $used=$response->{"$usedOID.$index"};
     my $free=$response->{"$freeOID.$index"};
     return ("UNKNOWN","UNKNOWN: OID $usedOID.$index not found") unless $Primitive->{"checkOIDVal"}->($used);
@@ -177,6 +190,8 @@ $Functions{table_mult_factor} = sub {
     # Get the index
     my $index = $Primitive->{"lookup"}->($response,$descrOID,$name);
     return ("UNKNOWN","UNKNOWN: $name not found in $descrOID") if ($index == -1);
+    return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $val1OID.$index") unless exists($response->{"$val1OID.$index"});
+    return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $val2OID.$index") unless exists($response->{"$val2OID.$index"});
     my $val1=$response->{"$val1OID.$index"};
     my $val2=$response->{"$val2OID.$index"};
     return ("UNKNOWN","UNKNOWN: OID $val1OID.$index not found") unless $Primitive->{"checkOIDVal"}->($val1);
@@ -190,6 +205,8 @@ $Functions{sysUpTime} = sub {
     my $warnTime     = $parameters->[1] || 900;
     my $sysUpTimeOID = (split('/',$variables->[0]))[1];
     my $timestamp    = 0;
+
+    return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $sysUpTimeOID") unless exists($response->{$sysUpTimeOID});
     my $sysUpTime    = $response->{$sysUpTimeOID};
 
     return ("UNKNOWN","UNKNOWN: OID $sysUpTimeOID not found") unless $Primitive->{"checkOIDVal"}->($sysUpTime);
@@ -215,6 +232,12 @@ $Functions{ifOperStatus} = sub {
     my $ifIndex = $Primitive->{"lookup"}->($response,$ifDescrOID,$interface);
     return ("UNKNOWN","Interface name ($interface) not found in ifDescr") if ($ifIndex == -1);
 
+    return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $ifAdminStatusOID.$ifIndex")
+        unless exists($response->{"$ifAdminStatusOID.$ifIndex"});
+    return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $ifOperStatusOID.$ifIndex")
+        unless exists($response->{"$ifOperStatusOID.$ifIndex"});
+    return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $ifAliasOID.$ifIndex")
+        unless exists($response->{"$ifAliasOID.$ifIndex"});
     my $ifAdminStatus = $response->{"$ifAdminStatusOID.$ifIndex"};
     my $ifOperStatus  = $response->{"$ifOperStatusOID.$ifIndex"};
     my $ifAlias       = $response->{"$ifAliasOID.$ifIndex"};
@@ -236,6 +259,14 @@ $Functions{staticIfOperStatus} = sub {
 
     my ($state, $answer);
 
+    return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $ifAdminStatusOID.$ifIndex")
+        unless exists($response->{"$ifAdminStatusOID.$ifIndex"});
+    return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $ifOperStatusOID.$ifIndex")
+        unless exists($response->{"$ifOperStatusOID.$ifIndex"});
+    return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $ifAliasOID.$ifIndex")
+        unless exists($response->{"$ifAliasOID.$ifIndex"});
+    return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $ifDescrOID.$ifIndex")
+        unless exists($response->{"$ifDescrOID.$ifIndex"});
     my $ifAdminStatus = $response->{"$ifAdminStatusOID.$ifIndex"};
     my $ifOperStatus  = $response->{"$ifOperStatusOID.$ifIndex"};
     my $ifAlias       = $response->{"$ifAliasOID.$ifIndex"};
@@ -263,6 +294,12 @@ $Functions{storage} = sub {
     my $hrIndex = $Primitive->{"lookup"}->($response,$hrStorageDescrOID,$partition);
     return ("UNKNOWN","Partition name ($partition) not found in hrStorageDescr") if ($hrIndex == -1);
 
+    return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $$hrStorageAllocationUnitsOID.$hrIndex")
+        unless exists($response->{"$hrStorageAllocationUnitsOID.$hrIndex"});
+    return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $hrStorageSizeOID.$hrIndex")
+        unless exists($response->{"$hrStorageSizeOID.$hrIndex"});
+    return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $hrStorageUsedOID.$hrIndex")
+        unless exists($response->{"$hrStorageUsedOID.$hrIndex"});
     my $hrAU = $response->{"$hrStorageAllocationUnitsOID.$hrIndex"};
     my $hrS  = $response->{"$hrStorageSizeOID.$hrIndex"};
     my $hrU  = $response->{"$hrStorageUsedOID.$hrIndex"};
@@ -294,8 +331,7 @@ $Functions{walk_grep_count} = sub {
     my $caption    = $parameters->[3] || "%d occurences";
     my $walk       = (split('/',$variables->[0]))[1];
 
-    my $value;
-    $value=0;
+    my $value=0;
     # Get the ifIndex
     foreach my $OID (keys %{$response})
     {
@@ -317,6 +353,9 @@ $Functions{statusWithMessage} = sub {
     my $warnValue  = $parameters->[1];
     my $valueOID   = (split('/',$variables->[0]))[1];
     my $msgOID     = (split('/',$variables->[1]))[1];
+
+    return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $valueOID") unless exists($response->{$valueOID});
+    return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $msgOID") unless exists($response->{$msgOID});
     my $stateValue = $response->{$valueOID};
     my $msgValue   = $response->{$msgOID};
     return ("UNKNOWN","UNKNOWN: OID $valueOID not found") unless $Primitive->{"checkOIDVal"}->($stateValue);

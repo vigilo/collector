@@ -42,6 +42,7 @@ $Functions{m_table} = sub {
     # Get the index
     my $index = $Primitive->{"lookup"}->($response,$descrOID,$name);
     return ("UNKNOWN","U") if ($index == -1);
+    return ("UNKNOWN","U") unless exists($response->{"$OID.$index"});
     my $value=$response->{"$OID.$index"};
     return ("UNKNOWN","U") unless $Primitive->{"checkOIDVal"}->($value);
     return ('OK', $value);
@@ -60,6 +61,7 @@ $Functions{m_table_add} = sub {
     my $value;
     foreach my $index (@indexes)
     {
+        return ("UNKNOWN","U") unless exists($response->{"$OID.$index"});
         $value=$response->{"$OID.$index"};
         return ("UNKNOWN","U") unless $Primitive->{"checkOIDVal"}->($value);
         $total += $value;
@@ -82,6 +84,8 @@ $Functions{m_table_mult} = sub {
     my $val2;
     foreach my $index (@indexes)
     {
+        return ("UNKNOWN","U") unless exists($response->{"$val1OID.$index"});
+        return ("UNKNOWN","U") unless exists($response->{"$val2OID.$index"});
         $val1=$response->{"$val1OID.$index"};
         $val2=$response->{"$val2OID.$index"};
         return ("UNKNOWN","U") unless $Primitive->{"checkOIDVal"}->($val1);
@@ -94,6 +98,7 @@ $Functions{percentage} = sub {
     my ($parameters, $variables, $response, $debug, $Primitive)=@_;
 
     my $OID = (split('/',$variables->[0]))[1];
+    return ("UNKNOWN","U") unless exists($response->{$OID});
     return ("UNKNOWN","U") unless $Primitive->{"checkOIDVal"}->($response->{$OID});
     return ('OK',$response->{$OID}/100);
 };
@@ -102,6 +107,8 @@ $Functions{percentage2values} = sub {
 
     my $OID1 = (split('/',$variables->[0]))[1];
     my $OID2 = (split('/',$variables->[1]))[1];
+    return ("UNKNOWN","U") unless exists($response->{$OID1});
+    return ("UNKNOWN","U") unless exists($response->{$OID2});
     return ("UNKNOWN","U") unless $Primitive->{"checkOIDVal"}->($response->{$OID1});
     return ("UNKNOWN","U") unless $Primitive->{"checkOIDVal"}->($response->{$OID2});
     return ('OK',$response->{$OID1}/$response->{$OID2}*100);
@@ -110,6 +117,7 @@ $Functions{directValue} = sub {
     my ($parameters, $variables, $response, $debug, $Primitive)=@_;
 
     my $OID = (split('/',$variables->[0]))[1];
+    return ("UNKNOWN","U") unless exists($response->{$OID});
     return ("UNKNOWN","U") unless $Primitive->{"checkOIDVal"}->($response->{$OID});
     return ('OK',$response->{$OID});
 };
@@ -118,6 +126,9 @@ $Functions{m_mult} = sub {
 
     my $OID1 = (split('/',$variables->[0]))[1];
     my $OID2 = (split('/',$variables->[1]))[1];
+
+    return ("UNKNOWN","U") unless exists($response->{$OID1});
+    return ("UNKNOWN","U") unless exists($response->{$OID2});
     my $val1 = $response->{$OID1};
     my $val2 = $response->{$OID2};
 
@@ -130,6 +141,8 @@ $Functions{m_sysUpTime} = sub {
     
     my $sysUpTimeOID = (split('/',$variables->[0]))[1];
     my $timestamp    = 0;
+
+    return ("UNKNOWN","U") unless exists($response->{$sysUpTimeOID});
     my $sysUpTime    = $response->{$sysUpTimeOID};
     return ("UNKNOWN","U") unless $Primitive->{"checkOIDVal"}->($sysUpTime);
 
@@ -146,17 +159,20 @@ $Functions{m_walk_grep_count} = sub {
     my $walk    = (split('/',$variables->[0]))[1];
 
     my $value=0;
+    my $matches=0;
     # Get the ifIndex
     foreach my $OID (keys %{$response})
     {
         if ($OID =~ /^$walk\./)
         {
+            $matches++;
             if ($response->{$OID} =~ /^$pattern\000?$/)
             {
                 $value++;
             }
         }
     }
+    return ("UNKNOWN", "U") if ($matches == 0);
     return ("OK", $value);
 };
 

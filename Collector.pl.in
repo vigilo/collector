@@ -519,12 +519,12 @@ None, but exits if something failed.
 sub verifySNMPIdent {
     my ($auth, $priv);
     if ($host::Host{'snmp'}->{'version'} == 3) {
-        # Must define a security level even though default is noAuthNoPriv
+        # Must define a security level even though the default is noAuthNoPriv
         # v3 requires a security username
         if (defined $host::Host{'snmp'}->{'seclevel'} 
             && defined $host::Host{'snmp'}->{'secname'}) {
         
-            # Must define a security level even though defualt is noAuthNoPriv
+            # Must define a security level even though the default is noAuthNoPriv
             unless ($host::Host{'snmp'}->{'seclevel'} =~ /^(noAuthNoPriv|authNoPriv|authPriv)$/ ) {
                 usage();
                 exit $ERRORS{"UNKNOWN"};
@@ -682,8 +682,9 @@ sub getOIDValues
                 if (!defined($responseGetOIDsTMP = $session->get_request(-varbindlist => \@snmpOIDs4GetTMP))) {
                     $answer=$session->error;
                     $session->close;
-                    print "WARNING2: SNMP error: $answer\n";
-                    exit $ERRORS{'WARNING'};
+                    $state = "WARNING";
+                    $answer = "WARNING2: SNMP error: $answer\n";
+                    return 1;
                 }
                 if ($responseGetOIDs) {
                     %$responseGetOIDs = (%$responseGetOIDs, %$responseGetOIDsTMP) if ($responseGetOIDsTMP);
@@ -695,8 +696,9 @@ sub getOIDValues
             if (!defined($responseGetOIDs = $session->get_request(-varbindlist => \@snmpOIDs4Get))) {
                 $answer=$session->error;
                 $session->close;
-                print "WARNING2: SNMP error: $answer\n";
-            exit $ERRORS{'WARNING'};
+                $state = "WARNING";
+                $answer = "WARNING2: SNMP error: $answer\n";
+                return 1;
             }
         }
     }
@@ -846,7 +848,7 @@ sub send2Metro
 
 =head3 Overview
 
-Walk throught the defined passive services, apply the supervision functions
+Walk through the defined passive services, apply the supervision functions
 to the received SNMP responses from host, compute the final Nagios-like states
 (OK, WARNING, CRITICAL, UNKNOWN…) and returns the hasmap with the values
 Uses then send2NagiosCmd or send2Nsca to forward the result to the right daemon.
