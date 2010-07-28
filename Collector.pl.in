@@ -292,6 +292,10 @@ $SIG{'ALRM'} = sub {
 
 alarm($timeout);
 
+# Initial state : we assume everything is fine.
+$state = 'OK';
+$answer = "OK: Collector OK\n";
+
 #Get all SNMP OIDs for this host
 &getAllOIDs();
 
@@ -314,9 +318,6 @@ if (&send2Metro != 0) {
 }
 
 ###############
-
-$state = 'OK';
-$answer = "OK: Collector OK\n";
 
 print "$answer";
 exit $ERRORS{$state};
