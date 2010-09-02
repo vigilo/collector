@@ -42,6 +42,7 @@ clean:
 	rm -f $(INFILES)
 
 
+SVN_REV = $(shell LANGUAGE=C LC_ALL=C svn info 2>/dev/null | awk '/^Revision:/ { print $$2 }')
 rpm: clean pkg/$(NAME).$(DISTRO).spec
 	mkdir -p build/$(NAME)
 	rsync -a --exclude .svn --delete ./ build/$(NAME)
@@ -55,6 +56,8 @@ rpm: clean pkg/$(NAME).$(DISTRO).spec
 				 --define "_srcrpmdir %{_topdir}/$(NAME)" \
 				 --define "_tmppath %{_topdir}/TMP" \
 				 --define "_builddir %{_topdir}/BUILD" \
+				 --define "svn .svn$(SVN_REV)" \
+				 --define "dist .$(DISTRO)" \
 				 build/rpm/$(NAME)/vigilo-$(NAME).spec
 	mkdir -p dist
 	find build/rpm/$(NAME) -type f -name "*.rpm" | xargs cp -a -f -t dist/
