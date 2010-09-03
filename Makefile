@@ -23,6 +23,7 @@ else \
 fi
 endef
 DISTRO := $(shell $(find-distro))
+DIST_TAG = $(DISTRO)
 
 Collector: Collector.pl.in
 	sed -e 's,@NAGIOS_PLUGINS_DIR@,$(NLIBDIR),g;s,@CONFDIR@,$(CONFDIR),g' $^ > $@
@@ -57,7 +58,7 @@ rpm: clean pkg/$(NAME).$(DISTRO).spec
 				 --define "_tmppath %{_topdir}/TMP" \
 				 --define "_builddir %{_topdir}/BUILD" \
 				 --define "svn .svn$(SVN_REV)" \
-				 --define "dist .$(DISTRO)" \
+				 --define "dist .$(DIST_TAG)" \
 				 build/rpm/$(NAME)/vigilo-$(NAME).spec
 	mkdir -p dist
 	find build/rpm/$(NAME) -type f -name "*.rpm" | xargs cp -a -f -t dist/
