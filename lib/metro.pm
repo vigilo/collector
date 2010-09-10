@@ -3,7 +3,7 @@
 ##
 ## metro.pm : PERL function package, Customizable metrology functions for the
 ##            Collector Nagios Plugin
-##        
+##
 ## Copyright (C) 2006-2009 CS-SI
 ##
 ## This program is free software; you can redistribute it and/or modify
@@ -138,7 +138,7 @@ $Functions{m_mult} = sub {
 };
 $Functions{m_sysUpTime} = sub {
     my ($parameters, $variables, $response, $debug, $Primitive)=@_;
-    
+
     my $sysUpTimeOID = (split('/',$variables->[0]))[1];
     my $timestamp    = 0;
 

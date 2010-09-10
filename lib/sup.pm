@@ -3,7 +3,7 @@
 ##
 ## sup.pm : PERL function package, Customizable supervision functions for the
 ##          Collector Nagios Plugin
-##        
+##
 ## Copyright (C) 2006-2009 CS-SI
 ##
 ## This program is free software; you can redistribute it and/or modify
@@ -200,7 +200,7 @@ $Functions{table_mult_factor} = sub {
 };
 $Functions{sysUpTime} = sub {
     my ($parameters, $variables, $response, $debug, $Primitive)=@_;
-    
+
     my $criticalTime = $parameters->[0] || 400;
     my $warnTime     = $parameters->[1] || 900;
     my $sysUpTimeOID = (split('/',$variables->[0]))[1];
@@ -236,8 +236,6 @@ $Functions{ifOperStatus} = sub {
         unless exists($response->{"$ifAdminStatusOID.$ifIndex"});
     return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $ifOperStatusOID.$ifIndex")
         unless exists($response->{"$ifOperStatusOID.$ifIndex"});
-    return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $ifAliasOID.$ifIndex")
-        unless exists($response->{"$ifAliasOID.$ifIndex"});
     my $ifAdminStatus = $response->{"$ifAdminStatusOID.$ifIndex"};
     my $ifOperStatus  = $response->{"$ifOperStatusOID.$ifIndex"};
     my $ifAlias       = $response->{"$ifAliasOID.$ifIndex"};
@@ -263,8 +261,6 @@ $Functions{staticIfOperStatus} = sub {
         unless exists($response->{"$ifAdminStatusOID.$ifIndex"});
     return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $ifOperStatusOID.$ifIndex")
         unless exists($response->{"$ifOperStatusOID.$ifIndex"});
-    return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $ifAliasOID.$ifIndex")
-        unless exists($response->{"$ifAliasOID.$ifIndex"});
     return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $ifDescrOID.$ifIndex")
         unless exists($response->{"$ifDescrOID.$ifIndex"});
     my $ifAdminStatus = $response->{"$ifAdminStatusOID.$ifIndex"};
