@@ -51,7 +51,7 @@ make install \
 rm -rf $RPM_BUILD_ROOT
 
 %files
-%defattr(-,root,root)
+%defattr(644,root,root,755)
 %doc COPYING README README.fr TODO host.example
 %{_libdir}/%{name}
 %{_libdir}/nagios/plugins/*
