@@ -54,7 +54,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(644,root,root,755)
 %doc COPYING README README.fr TODO host.example
 %{_libdir}/%{name}
-%{_libdir}/nagios/plugins/*
+%attr(755,root,root) %{_libdir}/nagios/plugins/*
 %config(noreplace) %{_sysconfdir}/*
 
 
