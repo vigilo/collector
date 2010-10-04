@@ -25,10 +25,21 @@ endef
 DISTRO := $(shell $(find-distro))
 DIST_TAG = $(DISTRO)
 
+ifeq ($(DISTRO),debian)
+	CMDPIPE = $(LOCALSTATEDIR)/spool/nagios/nagios.cmd
+else ifeq ($(DISTRO),mandriva)
+	CMDPIPE = $(LOCALSTATEDIR)/spool/nagios/nagios.cmd
+else ifeq ($(DISTRO),redhat)
+	CMDPIPE = $(LOCALSTATEDIR)/spool/nagios/cmd/nagios.cmd
+else
+	CMDPIPE = $(LOCALSTATEDIR)/spool/nagios/nagios.cmd
+endif
+
+
 Collector: Collector.pl.in
 	sed -e 's,@NAGIOS_PLUGINS_DIR@,$(NLIBDIR),g;s,@CONFDIR@,$(CONFDIR),g' $^ > $@
 general.conf: general.conf.in
-	sed -e 's,@LIBDIR@,$(LIBDIR),g;s,@SYSCONFDIR@,$(SYSCONFDIR),g;s,@LOCALSTATEDIR@,$(LOCALSTATEDIR),g' \
+	sed -e 's,@LIBDIR@,$(LIBDIR),g;s,@SYSCONFDIR@,$(SYSCONFDIR),g;s,@LOCALSTATEDIR@,$(LOCALSTATEDIR),g;s,@CMDPIPE@,$(CMDPIPE),g' \
 		$^ > $@
 
 install: $(INFILES)

@@ -1,7 +1,7 @@
 $lib = "@LIBDIR@/vigilo-collector";
 $path = "@SYSCONFDIR@/vigilo/vigiconf/prod/collector";
 $timeout = 0;
-$nagios_cmd_file = "/var/spool/nagios/nagios.cmd";
+$nagios_cmd_file = "@CMDPIPE@";
 $connector_socket = "@LOCALSTATEDIR@/lib/vigilo/connector-nagios/send.sock";
 
 # Don't remove this last line
