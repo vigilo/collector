@@ -889,35 +889,20 @@ sub send2Sup
                         ,&supServicesHashRef()->{$k_service}->{'variables'}
                         ,$response,$debug,\%Functions::Primitive
                         );
+        $result = {
+            return_code => $ERRORS{$state},
+            plugin_output => $answer,
+        };
         if (&supServicesHashRef()->{$k_service}->{'reRouteFor'})
         {
-            #$server = &supServicesHashRef()->{$k_service}->{'reRouteFor'}->{'server'};
-            #$port = &supServicesHashRef()->{$k_service}->{'reRouteFor'}->{'port'};
-            $remote = &supServicesHashRef()->{$k_service}->{'reRouteFor'}->{'remote'};
-            $service = &supServicesHashRef()->{$k_service}->{'reRouteFor'}->{'service'};
-            $hostName = &supServicesHashRef()->{$k_service}->{'reRouteFor'}->{'host'};
-        }
-        else
-        {
-            $remote = 0;
-            $hostName = $host::Host{'hostname'};
-            $service = $k_service;
-        }
-        $result = {
-            #server => $server,
-            #port => $port,
-                         remote => $remote,
-                         host_name => $hostName,
-                         svc_description => $service,
-                         return_code => $ERRORS{$state},
-                         plugin_output => $answer,
-                     };
-        if ($remote)
-        {
+            $result->{host_name} = &supServicesHashRef()->{$k_service}->{'reRouteFor'}->{'host'};
+            $result->{svc_description} = &supServicesHashRef()->{$k_service}->{'reRouteFor'}->{'service'};
             push (@results_remote, $result);
         }
         else
         {
+            $result->{host_name} = $host::Host{'hostname'};
+            $result->{svc_description} = $k_service;
             push (@results_local, $result);
         }
     }
@@ -972,7 +957,7 @@ sub send2RemoteNagios($)
     }
     foreach my $result (@results)
     {
-        $message = "oneToOne|".$result->{remote}."|command|$now|PROCESS_SERVICE_CHECK_RESULT|"
+        $message = "command|$now|PROCESS_SERVICE_CHECK_RESULT|"
                   .$result->{host_name}.";".$result->{svc_description}.";"
                   .$result->{return_code}.";".$result->{plugin_output}."\n";
         $sock->send($message);
