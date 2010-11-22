@@ -168,9 +168,9 @@ our %Primitive = (
     {
         if ($OID =~ /^$stateOID\.(\d+)/) {
             my $index = $1;
+            $nbItems++;
             if ($response->{$OID} =~ /^${okValue}\000?$/) {
                 print "ignoring \"".$response->{"$descrOID.$index"}."\" $caption that seems OK\n" if ($debug);
-                $nbItems++;
                 next;
             }
             push @msg,$response->{"$descrOID.$index"};
