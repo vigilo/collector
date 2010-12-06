@@ -426,7 +426,7 @@ sub process_arguments() {
         print_help();
         exit $ERRORS{'OK'};
     }
-  
+
     if ($opt_V) {
         print_revision($PROGNAME,'$Revision$ ');
         exit $ERRORS{'OK'};
@@ -459,7 +459,7 @@ sub process_arguments() {
 Builds up a list of all SNMP OIDs that will need to be gathered, either
 by SNMP GETs or WALKs.
 
-Uses the @snmpOIDs4Get and @snmpOIDs4Walk arrays to write the final lists 
+Uses the @snmpOIDs4Get and @snmpOIDs4Walk arrays to write the final lists
 
 =head3 Arguments
 
@@ -522,9 +522,9 @@ sub verifySNMPIdent {
     if ($host::Host{'snmp'}->{'version'} == 3) {
         # Must define a security level even though the default is noAuthNoPriv
         # v3 requires a security username
-        if (defined $host::Host{'snmp'}->{'seclevel'} 
+        if (defined $host::Host{'snmp'}->{'seclevel'}
             && defined $host::Host{'snmp'}->{'secname'}) {
-        
+
             # Must define a security level even though the default is noAuthNoPriv
             unless ($host::Host{'snmp'}->{'seclevel'} =~ /^(noAuthNoPriv|authNoPriv|authPriv)$/ ) {
                 usage();
@@ -533,7 +533,7 @@ sub verifySNMPIdent {
 
             # Authentication wanted
             if ($host::Host{'snmp'}->{'seclevel'} =~ /(authNoPriv|authPriv)/ ) {
-        
+
                 unless ($host::Host{'snmp'}->{'authproto'} =~ /(MD5|SHA1)/ ) {
                     usage();
                     exit $ERRORS{"UNKNOWN"};
@@ -551,7 +551,7 @@ sub verifySNMPIdent {
                 }
 
             }
-            
+
             # Privacy (DES encryption) wanted
             if ($host::Host{'snmp'}->{'seclevel'} eq  'authPriv' ) {
                 if (! defined $host::Host{'snmp'}->{'privpass'}) {
@@ -571,7 +571,7 @@ sub verifySNMPIdent {
             unless ( defined $host::Host{'snmp'}->{'context'}) {
                 $host::Host{'snmp'}->{'context'} = "";
             }
-        
+
         } else {
             usage();
             exit $ERRORS{'UNKNOWN'}; ;
@@ -593,7 +593,7 @@ sub verifySNMPIdent {
             print ("$state: $answer");
             exit $ERRORS{$state};
         }
-    
+
     }elsif ( $host::Host{'snmp'}->{'version'} == 3 ) {
 
         if ($host::Host{'snmp'}->{'seclevel'} eq 'noAuthNoPriv') {
@@ -611,7 +611,7 @@ sub verifySNMPIdent {
                 -version  => $host::Host{'snmp'}->{'version'},
                 -username => $host::Host{'snmp'}->{'secname'},
                 #$auth,
-                -authpassword => $host::Host{'snmp'}->{'authpass'}, 
+                -authpassword => $host::Host{'snmp'}->{'authpass'},
                 -authprotocol => $host::Host{'snmp'}->{'authproto'},
             );
         }elsif ($host::Host{'snmp'}->{'seclevel'} eq 'authPriv' ) {
@@ -751,7 +751,7 @@ A hashmap of the gatheres (OID, value) items.
 
 sub snmpWalk($)
 {
-    
+
     my $OIDs = shift;
     my @args;
     my %returnTmp;
@@ -773,7 +773,7 @@ sub snmpWalk($)
                     if (!Net::SNMP::oid_base_match($OIDs->[$i], $_)) { last outer; }
                     $returnTmp{$_} = $session->var_bind_list()->{$_};
                     # Make sure we have not hit the end of the MIB
-                    if ($session->var_bind_list()->{$_} eq 'endOfMibView') { last outer; } 
+                    if ($session->var_bind_list()->{$_} eq 'endOfMibView') { last outer; }
                 }
                 # Get the last OBJECT IDENTIFIER in the returned list
                 @args = (-maxrepetitions => &snmpOIDsPerPDU, -varbindlist => [pop(@oids)]);
@@ -781,6 +781,26 @@ sub snmpWalk($)
         }
     }
     return \%returnTmp;
+}
+
+=head2 decodeDSName($)
+
+=head3 Overview
+
+Decodes a datasource name.
+
+=head3 Returns
+
+The decoded name for that datasource.
+
+=cut
+
+sub decodeDSName
+{
+    $_ = shift;
+    tr/+/ /;
+    s/%(..)/pack('c', hex($1))/eg;
+    return ($_);
 }
 
 =head2 send2Metro
@@ -815,6 +835,7 @@ sub send2Metro
     my $DSList = &metroDSArrayRef;
     my $sock;
     my $hostname;
+    my $dsname;
     my $message;
     if (! ($sock = IO::Socket::UNIX->new( Type => IO::Socket::SOCK_STREAM, Peer => $connector_socket)))
     {
@@ -823,7 +844,7 @@ sub send2Metro
     }
     for (my $i=0; $i<=$#{$DSList}; $i++)
     {
-        ($dish,$msg_tmp) = 
+        ($dish,$msg_tmp) =
             $Functions::Functions{$DSList->[$i]->{'function'}}->($DSList->[$i]->{'parameters'}
                     , $DSList->[$i]->{'variables'}
                     , $response, $debug, \%Functions::Primitive
@@ -837,7 +858,8 @@ sub send2Metro
         {
             $hostname = $host::Host{'hostname'};
         }
-        $message = "perf|$now|$hostname|".$DSList->[$i]->{'datasource'}."|$msg_tmp\n";
+        $dsname = decodeDSName($DSList->[$i]->{'datasource'});
+        $message = "perf|$now|$hostname|$dsname|$msg_tmp\n";
         $sock->send($message);
         print "send2Metro: $message" if ($debug);
     }
@@ -883,7 +905,7 @@ sub send2Sup
     # Loops over all monitoring services to get the service's state and its output (answer)
     foreach my $k_service (keys %{&supServicesHashRef()})
     {
-        my ($state, $answer) = 
+        my ($state, $answer) =
             $Functions::Functions{
                 &supServicesHashRef()->{$k_service}->{'function'}}->(&supServicesHashRef()->{$k_service}->{'parameters'}
                         ,&supServicesHashRef()->{$k_service}->{'variables'}
