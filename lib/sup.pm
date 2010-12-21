@@ -92,6 +92,8 @@ $Functions{simple_factor} = sub {
 
     my $value      = $response->{$OID};
     return ("UNKNOWN","UNKNOWN: OID $OID not found") unless $Primitive->{"checkOIDVal"}->($value);
+    # Verifions qu'on a bien un nombre
+    return ("UNKNOWN","UNKNOWN: $value") unless $value =~ /^-?(\d+\.?\d*|\.\d+)$/;
     return $Primitive->{"thresholdIt"}->($value*$factor,$warnThresh,$critThresh,$caption, $Primitive);
 };
 $Functions{table} = sub {
