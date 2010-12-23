@@ -893,6 +893,7 @@ None
 sub send2Sup
 {
     use IO::Socket::INET;
+    use Net::Domain qw(hostname hostfqdn hostdomain);
 
     my $remote;
     my $hostName;
@@ -901,6 +902,8 @@ sub send2Sup
     my $result;
     my @results_local = ();
     my @results_remote = ();
+    my $local_hostname = hostname();
+    my $local_fqdn = hostfqdn();
 
     # Loops over all monitoring services to get the service's state and its output (answer)
     foreach my $k_service (keys %{&supServicesHashRef()})
@@ -919,7 +922,13 @@ sub send2Sup
         {
             $result->{host_name} = &supServicesHashRef()->{$k_service}->{'reRouteFor'}->{'host'};
             $result->{svc_description} = &supServicesHashRef()->{$k_service}->{'reRouteFor'}->{'service'};
-            push (@results_remote, $result);
+            my $vserver = &supServicesHashRef()->{$k_service}->{'reRouteFor'}->{'vserver'};
+            if ($vserver eq $local_hostname || $vserver eq $local_fqdn || $vserver eq "localhost")
+            {
+                push (@results_local, $result);
+            } else {
+                push (@results_remote, $result);
+            }
         }
         else
         {
