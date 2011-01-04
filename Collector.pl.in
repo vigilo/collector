@@ -784,26 +784,6 @@ sub snmpWalk($)
     return \%returnTmp;
 }
 
-=head2 decodeDSName($)
-
-=head3 Overview
-
-Decodes a datasource name.
-
-=head3 Returns
-
-The decoded name for that datasource.
-
-=cut
-
-sub decodeDSName
-{
-    $_ = shift;
-    tr/+/ /;
-    s/%(..)/pack('c', hex($1))/eg;
-    return ($_);
-}
-
 =head2 send2Metro
 
 =head3 Overview
@@ -859,7 +839,7 @@ sub send2Metro
         {
             $hostname = $host::Host{'hostname'};
         }
-        $dsname = decodeDSName($DSList->[$i]->{'datasource'});
+        $dsname = $DSList->[$i]->{'datasource'};
         $message = "perf|$now|$hostname|$dsname|$msg_tmp\n";
         $sock->send($message);
         print "send2Metro: $message" if ($debug);
