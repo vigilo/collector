@@ -214,7 +214,7 @@ sub snmpWalk($);
 
 my $status;
 my ($opt_V, $opt_h, $opt_H, $opt_d, $conf);
-our ($lib, $path, $timeout, $nagios_cmd_file, $connector_socket);
+our ($lib, $path, $timeout, $nagios_cmd_file, $connector_socket, $tmppath);
 
 my $state = "UNKNOWN";
 my $answer = "";
@@ -243,6 +243,10 @@ do $conf;
 
 if ((!defined $timeout) || ($timeout == 0)) {
     $timeout = $TIMEOUT;
+}
+
+if (!defined $tmppath) {
+    $tmppath = "/tmp";
 }
 
 if (! $path) {
@@ -936,7 +940,7 @@ sub send2NagiosCmd($)
     #$Nagios::Cmd::debug = 1;
     #my $nagios_cmd = Nagios::Cmd->new_anyfile("/tmp/test_file.txt");
 
-    (my $tmpfh, my $tmpfn) = tempfile("/tmp/Collector-XXXXXX", UNLINK => 0);
+    (my $tmpfh, my $tmpfn) = tempfile($tmppath."/Collector-XXXXXX", UNLINK => 0);
     foreach my $result (@results)
     {
         $message = "[$now] PROCESS_SERVICE_CHECK_RESULT;".$result->{host_name}

@@ -3,6 +3,7 @@ $path = "@SYSCONFDIR@/vigilo/vigiconf/prod/collector";
 $timeout = 3;
 $nagios_cmd_file = "@CMDPIPE@";
 $connector_socket = "@LOCALSTATEDIR@/lib/vigilo/connector-nagios/send.sock";
+$tmppath = "/dev/shm";
 
 # Don't remove this last line
 1;
