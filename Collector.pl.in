@@ -536,12 +536,15 @@ sub verifySNMPIdent {
                 exit $ERRORS{"UNKNOWN"};
             }
 
-            # Authentication wanted
+            # Authentication wanted (MD5- or SHA1-based)
             if ($host::Host{'snmp'}->{'seclevel'} =~ /(authNoPriv|authPriv)/ ) {
-
-                unless ($host::Host{'snmp'}->{'authproto'} =~ /(MD5|SHA1)/ ) {
-                    usage();
-                    exit $ERRORS{"UNKNOWN"};
+                if (! defined $host::Host{'snmp'}->{'authproto'}) {
+                    $host::Host{'snmp'}->{'authproto'} = "MD5";
+                }else{
+                    unless ($host::Host{'snmp'}->{'authproto'} =~ /(MD5|SHA1)/i ) {
+                        usage();
+                        exit $ERRORS{"UNKNOWN"};
+                    }
                 }
 
                 if ( !defined $host::Host{'snmp'}->{'authpass'}) {
@@ -557,8 +560,17 @@ sub verifySNMPIdent {
 
             }
 
-            # Privacy (DES encryption) wanted
+            # Privacy wanted (using DES or AES encryption)
             if ($host::Host{'snmp'}->{'seclevel'} eq  'authPriv' ) {
+                if (! defined $host::Host{'snmp'}->{'privproto'}) {
+                    $host::Host{'snmp'}->{'privproto'} = "DES";
+                }else{
+                    unless ($host::Host{'snmp'}->{'privproto'} =~ /(DES|AES)/i ) {
+                        usage();
+                        exit $ERRORS{"UNKNOWN"};
+                    }
+                }
+
                 if (! defined $host::Host{'snmp'}->{'privpass'}) {
                     usage();
                     exit $ERRORS{"UNKNOWN"};
@@ -572,7 +584,6 @@ sub verifySNMPIdent {
             }
 
             # Context name defined or default
-
             unless ( defined $host::Host{'snmp'}->{'context'}) {
                 $host::Host{'snmp'}->{'context'} = "";
             }
@@ -628,6 +639,7 @@ sub verifySNMPIdent {
                 $auth,
                 -authprotocol => $host::Host{'snmp'}->{'authproto'},
                 $priv
+                -privprotocol => $host::Host{'snmp'}->{'privproto'}
             );
         }
 
