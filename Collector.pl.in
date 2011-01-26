@@ -541,7 +541,7 @@ sub verifySNMPIdent {
                 if (! defined $host::Host{'snmp'}->{'authproto'}) {
                     $host::Host{'snmp'}->{'authproto'} = "MD5";
                 }else{
-                    unless ($host::Host{'snmp'}->{'authproto'} =~ /(MD5|SHA1)/i ) {
+                    unless ($host::Host{'snmp'}->{'authproto'} =~ /(MD5|SHA)/i ) {
                         usage();
                         exit $ERRORS{"UNKNOWN"};
                     }
@@ -565,7 +565,7 @@ sub verifySNMPIdent {
                 if (! defined $host::Host{'snmp'}->{'privproto'}) {
                     $host::Host{'snmp'}->{'privproto'} = "DES";
                 }else{
-                    unless ($host::Host{'snmp'}->{'privproto'} =~ /(DES|AES)/i ) {
+                    unless ($host::Host{'snmp'}->{'privproto'} =~ /(DES|AES|3DES)/i ) {
                         usage();
                         exit $ERRORS{"UNKNOWN"};
                     }
@@ -638,8 +638,8 @@ sub verifySNMPIdent {
                 -username => $host::Host{'snmp'}->{'secname'},
                 $auth,
                 -authprotocol => $host::Host{'snmp'}->{'authproto'},
-                $priv
-                -privprotocol => $host::Host{'snmp'}->{'privproto'}
+                $priv,
+                -privprotocol => $host::Host{'snmp'}->{'privproto'},
             );
         }
 
