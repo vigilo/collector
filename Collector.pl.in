@@ -552,9 +552,9 @@ sub verifySNMPIdent {
                     exit $ERRORS{"UNKNOWN"};
                 }else{
                     if ($host::Host{'snmp'}->{'authpass'} =~ /^0x/ ) {
-                        $auth = "-authkey => $host::Host{'snmp'}->{'authpass'}" ;
+                        $auth = "-authkey" ;
                     }else{
-                        $auth = "-authpassword => '$host::Host{'snmp'}->{'authpass'}'";
+                        $auth = "-authpassword";
                     }
                 }
 
@@ -576,9 +576,9 @@ sub verifySNMPIdent {
                     exit $ERRORS{"UNKNOWN"};
                 }else{
                     if ($host::Host{'snmp'}->{'privpass'} =~ /^0x/){
-                        $priv = "-privkey => $host::Host{'snmp'}->{'privpass'}";
+                        $priv = "-privkey";
                     }else{
-                        $priv = "-privpassword => $host::Host{'snmp'}->{'privpass'}";
+                        $priv = "-privpassword";
                     }
                 }
             }
@@ -626,19 +626,18 @@ sub verifySNMPIdent {
                 -port      => $host::Host{'snmp'}->{'port'},
                 -version  => $host::Host{'snmp'}->{'version'},
                 -username => $host::Host{'snmp'}->{'secname'},
-                #$auth,
-                -authpassword => $host::Host{'snmp'}->{'authpass'},
+                $auth => $host::Host{'snmp'}->{'authpass'},
                 -authprotocol => $host::Host{'snmp'}->{'authproto'},
             );
         }elsif ($host::Host{'snmp'}->{'seclevel'} eq 'authPriv' ) {
             ($session, $error) = Net::SNMP->session(
-                -hostname  => $host::Host{'snmp'}->{'IPAddress'},
+                -hostname  => $host::Host{'IPAddress'},
                 -port      => $host::Host{'snmp'}->{'port'},
                 -version  => $host::Host{'snmp'}->{'version'},
                 -username => $host::Host{'snmp'}->{'secname'},
-                $auth,
+                $auth => $host::Host{'snmp'}->{'authpass'},
                 -authprotocol => $host::Host{'snmp'}->{'authproto'},
-                $priv,
+                $priv => $host::Host{'snmp'}->{'privpass'},
                 -privprotocol => $host::Host{'snmp'}->{'privproto'},
             );
         }
