@@ -55,7 +55,9 @@ rm -rf $RPM_BUILD_ROOT
 %doc COPYING README README.fr TODO host.example
 %{_libdir}/%{name}
 %attr(755,root,root) %{_libdir}/nagios/plugins/*
-%config(noreplace) %{_sysconfdir}/*
+%dir %{_sysconfdir}/vigilo
+%config(noreplace) %{_sysconfdir}/vigilo/%{module}
+%config(noreplace) %attr(755,root,root) %{_sysconfdir}/cron.hourly/*.sh
 
 
 %changelog

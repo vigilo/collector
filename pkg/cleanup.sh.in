@@ -1,0 +1,10 @@
+#!/bin/sh
+
+conffile="@CONFDIR@/general.conf"
+tmppath=`perl -e 'do "'$conffile'"; print $tmppath;'`
+if [ -z "$tmppath" ]; then
+    echo "ERROR: can't find vigilo-collector's temporary directory" >&2
+    exit 1
+fi
+find $tmppath -name "Collector-*" -a -mmin +60 -delete
+

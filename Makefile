@@ -7,7 +7,7 @@ LOCALSTATEDIR = /var
 CONFDIR = $(SYSCONFDIR)/vigilo/collector
 DESTDIR =
 
-INFILES = Collector general.conf
+INFILES = Collector general.conf pkg/cleanup.sh
 
 build: $(INFILES)
 
@@ -41,14 +41,17 @@ Collector: Collector.pl.in
 general.conf: general.conf.in
 	sed -e 's,@LIBDIR@,$(LIBDIR),g;s,@SYSCONFDIR@,$(SYSCONFDIR),g;s,@LOCALSTATEDIR@,$(LOCALSTATEDIR),g;s,@CMDPIPE@,$(CMDPIPE),g' \
 		$^ > $@
+pkg/cleanup.sh: pkg/cleanup.sh.in
+	sed -e 's,@CONFDIR@,$(CONFDIR),g' $^ > $@
 
 install: $(INFILES)
 	-mkdir -p $(DESTDIR)$(NLIBDIR) $(DESTDIR)$(CLIBDIR) $(DESTDIR)$(CONFDIR)
-	install -m 755 Collector $(DESTDIR)$(NLIBDIR)/Collector
-	install -m 644 general.conf $(DESTDIR)$(CONFDIR)/general.conf
+	install -m 755 -p Collector $(DESTDIR)$(NLIBDIR)/Collector
+	install -m 644 -p general.conf $(DESTDIR)$(CONFDIR)/general.conf
 	cp -pr lib/* $(DESTDIR)$(CLIBDIR)/
 	mkdir $(DESTDIR)$(CLIBDIR)/ext
 	find $(DESTDIR)$(CLIBDIR) -type d -name .svn -exec rm -rf {} \;
+	install -m 755 -p -D pkg/cleanup.sh $(DESTDIR)/etc/cron.hourly/vigilo-collector-cleanup.sh
 
 clean:
 	rm -f $(INFILES)
