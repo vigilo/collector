@@ -18,7 +18,7 @@ Requires:   perl-Digest-HMAC
 Requires:   perl-Digest-SHA1
 Requires:   perl-Nagios-Cmd
 Requires:   nagios
-Buildarch:  noarch
+#Buildarch:  noarch  # on installe dans _libdir
 
 # Renamed from nagios-plugin-collector
 Obsoletes:  nagios-plugin-collector < 1.5-2
