@@ -7,7 +7,7 @@ LOCALSTATEDIR = /var
 CONFDIR = $(SYSCONFDIR)/vigilo/collector
 DESTDIR =
 
-INFILES = Collector general.conf pkg/cleanup.sh
+INFILES = Collector general.conf pkg/cleanup.sh Collector.1
 
 build: $(INFILES)
 
@@ -43,6 +43,9 @@ general.conf: general.conf.in
 		$^ > $@
 pkg/cleanup.sh: pkg/cleanup.sh.in
 	sed -e 's,@CONFDIR@,$(CONFDIR),g' $^ > $@
+Collector.1: Collector
+	perldoc -oMan -d $@ $^
+man: Collector.1
 
 install: $(INFILES)
 	-mkdir -p $(DESTDIR)$(NLIBDIR) $(DESTDIR)$(CLIBDIR) $(DESTDIR)$(CONFDIR)
@@ -78,4 +81,4 @@ rpm: clean pkg/$(NAME).$(DISTRO).spec
 	find build/rpm/$(NAME) -type f -name "*.rpm" | xargs cp -a -f -t dist/
 
 
-.PHONY: build install clean rpm
+.PHONY: build install clean rpm man
