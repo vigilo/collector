@@ -12,17 +12,15 @@ URL:        http://www.projet-vigilo.org
 Group:      System/Servers
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-build
 License:    GPLv2
+#Buildarch:  noarch  # on installe dans _libdir
+
 Requires:   perl-Crypt-DES
 Requires:   perl-Net-SNMP
 Requires:   perl-Digest-HMAC
 Requires:   perl-Digest-SHA1
 Requires:   perl-Nagios-Cmd
 Requires:   nagios
-#Buildarch:  noarch  # on installe dans _libdir
 
-# Renamed from nagios-plugin-collector
-Obsoletes:  nagios-plugin-collector < 1.5-2
-Provides:   nagios-plugin-collector = %{version}-%{release}
 
 %description
 This plugin collects the SNMP data once and forwards it to an UDP port. Its
