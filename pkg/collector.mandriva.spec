@@ -52,7 +52,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%doc COPYING README README.fr TODO host.example
+%doc COPYING README.txt TODO host.example
 %{_libdir}/%{name}
 %attr(755,root,root) %{_libdir}/nagios/plugins/*
 %dir %{_sysconfdir}/vigilo
