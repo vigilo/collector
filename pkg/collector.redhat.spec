@@ -1,13 +1,13 @@
 %define module  collector
 %define name    vigilo-%{module}
-%define version 2.0.0
+%define version @VERSION@
 %define release 1%{?svn}%{?dist}
 
 Name:       %{name}
 Summary:    Centralized collector plugin for Nagios
 Version:    %{version}
 Release:    %{release}
-Source0:    collector.tar.bz2
+Source0:    %{name}-%{version}.tar.gz
 URL:        http://www.projet-vigilo.org
 Group:      System/Servers
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-build
@@ -28,7 +28,7 @@ configuration needs to be generated.
 This application is part of the Vigilo Project <http://vigilo-project.org>
 
 %prep
-%setup -q -n %{module}
+%setup -q
 
 %build
 make \
