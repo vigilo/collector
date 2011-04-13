@@ -55,7 +55,7 @@ install: $(INFILES)
 	install -m 755 -p Collector $(DESTDIR)$(NLIBDIR)/Collector
 	install -m 644 -p general.conf $(DESTDIR)$(CONFDIR)/general.conf
 	cp -pr lib/* $(DESTDIR)$(CLIBDIR)/
-	mkdir $(DESTDIR)$(CLIBDIR)/ext
+	mkdir -p $(DESTDIR)$(CLIBDIR)/ext
 	find $(DESTDIR)$(CLIBDIR) -type d -name .svn -exec rm -rf {} \;
 	install -m 755 -p -D pkg/cleanup.sh $(DESTDIR)/etc/cron.hourly/$(PKGNAME)-cleanup.sh
 

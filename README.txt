@@ -15,8 +15,8 @@ Collector est un composant de Vigilo_.
 
 Installation
 ------------
-L'installation se fait par la commande ``make install`` (à exécuter en
-``root``).
+L'installation se fait par la commande ``make`` (exécutée en utilisateur
+standard) suivie de la commande ``make install`` (exécutée en ``root``).
 
 
 Options
