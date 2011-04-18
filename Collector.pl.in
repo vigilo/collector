@@ -351,7 +351,7 @@ sub usage() {
   printf "\n";
   printf "usage: \n";
   printf "Collector \n";
-  printf "Copyright (C) 2006-2009 CS-SI\n";
+  printf "Copyright (C) 2006-2011 CS-SI\n";
   printf "Collector comes with ABSOLUTELY NO WARRANTY\n";
   printf "This programm is licensed under the terms of the ";
   printf "GNU General Public License\n(check source code for details)\n";
