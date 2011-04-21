@@ -66,7 +66,7 @@ clean:
 sdist: dist/$(PKGNAME)-$(VERSION).tar.gz
 dist/$(PKGNAME)-$(VERSION).tar.gz:
 	mkdir -p build/sdist/$(PKGNAME)-$(VERSION)
-	rsync -a --exclude .svn --exclude /dist --exclude /build --delete ./ build/sdist/$(PKGNAME)-$(VERSION)
+	rsync -aL --exclude .svn --exclude /dist --exclude /build --delete ./ build/sdist/$(PKGNAME)-$(VERSION)
 	mkdir -p dist
 	cd build/sdist; tar -czf $(CURDIR)/dist/$(PKGNAME)-$(VERSION).tar.gz $(PKGNAME)-$(VERSION)
 
