@@ -14,7 +14,9 @@ Collector est un composant de Vigilo_.
 
 Dépendances
 -----------
-Le Collector a besoin de Nagios_ et du module Perl Net::SNMP :
+Collector est un plugin Nagios_ écrit en Perl, il nécessite donc à la
+fois Nagios et Perl (v5.x), ainsi que les modules perl Nagios::Cmd Net::SNMP,
+et de fonctions contenues dans nagios-plugins-perl.
 
 
 Installation
