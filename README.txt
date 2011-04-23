@@ -12,6 +12,10 @@ Pour les détails du fonctionnement du Collector, se reporter à la
 
 Collector est un composant de Vigilo_.
 
+Dépendances
+-----------
+Le Collector a besoin de Nagios_ et du module Perl Net::SNMP :
+
 
 Installation
 ------------
