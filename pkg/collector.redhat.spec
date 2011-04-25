@@ -20,6 +20,8 @@ Requires:   perl-Digest-HMAC
 Requires:   perl-Digest-SHA1
 Requires:   perl-Nagios-Cmd
 Requires:   nagios
+# Pour _libdir/nagios/utils.pm
+Requires:   nagios-plugins-perl
 
 
 %description

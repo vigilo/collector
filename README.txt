@@ -12,11 +12,20 @@ Pour les détails du fonctionnement du Collector, se reporter à la
 
 Collector est un composant de Vigilo_.
 
+
 Dépendances
 -----------
-Collector est un plugin Nagios_ écrit en Perl, il nécessite donc à la
-fois Nagios et Perl (v5.x), ainsi que les modules perl Nagios::Cmd Net::SNMP,
-et de fonctions contenues dans nagios-plugins-perl.
+Collector nécessite le fichier ``/usr/lib(64)/nagios/plugins/utils.pm``,
+fourni dans le paquet ``nagios-plugins-perl`` sur Red Hat et dans le paquet
+``nagios-plugins`` sur Mandriva.
+
+Il nécessite aussi Nagios_, et les modules Perl (v5.x) suivants:
+
+- ``Net::SNMP``
+- ``Crypt::DES``
+- ``Digest::HMAC``
+- ``Digest::SHA1``
+- ``Nagios::Cmd``
 
 
 Installation
@@ -50,6 +59,7 @@ Collector est sous licence `GPL v2`_.
 
 .. _documentation officielle: Vigilo_
 .. _Vigilo: http://www.projet-vigilo.org
+.. _Nagios: http://nagios.org
 .. _GPL v2: http://www.gnu.org/licenses/gpl-2.0.html
 
 .. vim: set syntax=rst fileencoding=utf-8 tw=78 :
