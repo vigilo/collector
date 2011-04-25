@@ -1,18 +1,12 @@
 NAME = collector
 PKGNAME = vigilo-$(NAME)
 LIBDIR = /usr/lib
-NLIBDIR = $(LIBDIR)/nagios/plugins
+NPLUGDIR = /usr/lib$(if $(realpath /usr/lib64),64,)/nagios/plugins
 CLIBDIR = $(LIBDIR)/$(PKGNAME)
 SYSCONFDIR = /etc
 LOCALSTATEDIR = /var
 CONFDIR = $(SYSCONFDIR)/vigilo/$(NAME)
 DESTDIR =
-
-VERSION := $(shell cat VERSION.txt)
-
-INFILES = Collector general.conf pkg/cleanup.sh Collector.1
-
-build: $(INFILES)
 
 define find-distro
 if [ -f /etc/debian_version ]; then \
@@ -38,9 +32,14 @@ else
 	CMDPIPE = $(LOCALSTATEDIR)/spool/nagios/nagios.cmd
 endif
 
+VERSION := $(shell cat VERSION.txt)
+
+INFILES = Collector general.conf pkg/cleanup.sh Collector.1
+
+build: $(INFILES)
 
 Collector: Collector.pl.in
-	sed -e 's,@NAGIOS_PLUGINS_DIR@,$(NLIBDIR),g;s,@CONFDIR@,$(CONFDIR),g' $^ > $@
+	sed -e 's,@NAGIOS_PLUGINS_DIR@,$(NPLUGDIR),g;s,@CONFDIR@,$(CONFDIR),g' $^ > $@
 general.conf: general.conf.in
 	sed -e 's,@LIBDIR@,$(LIBDIR),g;s,@SYSCONFDIR@,$(SYSCONFDIR),g;s,@LOCALSTATEDIR@,$(LOCALSTATEDIR),g;s,@CMDPIPE@,$(CMDPIPE),g' \
 		$^ > $@
@@ -51,8 +50,8 @@ Collector.1: Collector
 man: Collector.1
 
 install: $(INFILES)
-	-mkdir -p $(DESTDIR)$(NLIBDIR) $(DESTDIR)$(CLIBDIR) $(DESTDIR)$(CONFDIR)
-	install -m 755 -p Collector $(DESTDIR)$(NLIBDIR)/Collector
+	-mkdir -p $(DESTDIR)$(NPLUGDIR) $(DESTDIR)$(CLIBDIR) $(DESTDIR)$(CONFDIR)
+	install -m 755 -p Collector $(DESTDIR)$(NPLUGDIR)/Collector
 	install -m 644 -p general.conf $(DESTDIR)$(CONFDIR)/general.conf
 	cp -pr lib/* $(DESTDIR)$(CLIBDIR)/
 	mkdir -p $(DESTDIR)$(CLIBDIR)/ext
