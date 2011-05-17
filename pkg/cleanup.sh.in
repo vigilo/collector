@@ -6,5 +6,5 @@ if [ -z "$tmppath" ]; then
     echo "ERROR: can't find vigilo-collector's temporary directory" >&2
     exit 1
 fi
-find $tmppath -name "Collector-*" -a -mmin +60 -delete
+find $tmppath -name "Collector-*" -a -mmin +5 -delete
 

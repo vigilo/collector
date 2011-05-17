@@ -57,7 +57,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_libdir}/nagios/plugins/*
 %dir %{_sysconfdir}/vigilo
 %config(noreplace) %{_sysconfdir}/vigilo/%{module}
-%config(noreplace) %attr(755,root,root) %{_sysconfdir}/cron.hourly/*.sh
+%config(noreplace) %{_sysconfdir}/cron.d/*.cron
 
 
 %changelog

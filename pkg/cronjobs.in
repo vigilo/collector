@@ -1,0 +1,2 @@
+# Nettoie les fichiers temporaires de vigilo-collector
+* * * * *   nagios   sh @CLIBDIR@/cleanup.sh
