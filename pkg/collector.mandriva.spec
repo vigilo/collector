@@ -1,7 +1,7 @@
 %define module  collector
 %define name    vigilo-%{module}
 %define version @VERSION@
-%define release 1%{?svn}%{?dist}
+%define release 1%{?dev}%{?dist}
 
 Name:       %{name}
 Summary:    Centralized collector plugin for Nagios

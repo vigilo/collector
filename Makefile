@@ -89,7 +89,7 @@ rpm: clean pkg/$(NAME).$(DISTRO).spec dist/$(PKGNAME)-$(VERSION).tar.gz
 				 --define "_srcrpmdir %{_topdir}/$(NAME)" \
 				 --define "_tmppath %{_topdir}/TMP" \
 				 --define "_builddir %{_topdir}/BUILD" \
-				 $(if $(RELEASE),,--define "svn .svn$(SVN_REV)") \
+				 $(if $(RELEASE),,--define "dev .dev$(SVN_REV)") \
 				 --define "dist .$(DIST_TAG)" \
 				 $(RPMBUILD_OPTS) \
 				 build/rpm/$(NAME)/$(PKGNAME).spec
