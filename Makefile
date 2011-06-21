@@ -69,7 +69,7 @@ clean:
 
 SVN_REV = $(shell LANGUAGE=C LC_ALL=C svn info 2>/dev/null | awk '/^Revision:/ { print $$2 }')
 
-sdist: dist/$(PKGNAME)-$(VERSION)$(if $(RELEASE),,-r$(SVN_REV)).tar.gz
+sdist: dist/$(PKGNAME)-$(VERSION)$(if $(RELEASE),,-dev$(SVN_REV)).tar.gz
 dist/$(PKGNAME)-$(VERSION).tar.gz dist/$(PKGNAME)-$(VERSION)%.tar.gz:
 	mkdir -p build/sdist/$(PKGNAME)-$(VERSION)
 	rsync -aL --exclude .svn --exclude /dist --exclude /build --delete ./ build/sdist/$(PKGNAME)-$(VERSION)
@@ -89,7 +89,7 @@ rpm: clean pkg/$(NAME).$(DISTRO).spec dist/$(PKGNAME)-$(VERSION).tar.gz
 				 --define "_srcrpmdir %{_topdir}/$(NAME)" \
 				 --define "_tmppath %{_topdir}/TMP" \
 				 --define "_builddir %{_topdir}/BUILD" \
-				 $(if $(RELEASE),,--define "dev .dev$(SVN_REV)") \
+				 $(if $(RELEASE),,--define "dev .1.dev$(SVN_REV)") \
 				 --define "dist .$(DIST_TAG)" \
 				 $(RPMBUILD_OPTS) \
 				 build/rpm/$(NAME)/$(PKGNAME).spec
