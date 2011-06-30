@@ -67,14 +67,14 @@ clean:
 	rm -rf build
 
 
-SVN_REV = $(shell LANGUAGE=C LC_ALL=C svn info 2>/dev/null | awk '/^Revision:/ { print $$2 }')
+GIT_CHSET = $(shell git rev-parse --short HEAD)
 
-sdist: dist/$(PKGNAME)-$(VERSION)$(if $(RELEASE),,-dev$(SVN_REV)).tar.gz
+sdist: dist/$(PKGNAME)-$(VERSION)$(if $(RELEASE),,.g$(GIT_CHSET)).tar.gz
 dist/$(PKGNAME)-$(VERSION).tar.gz dist/$(PKGNAME)-$(VERSION)%.tar.gz:
-	mkdir -p build/sdist/$(PKGNAME)-$(VERSION)
-	rsync -aL --exclude .svn --exclude /dist --exclude /build --delete ./ build/sdist/$(PKGNAME)-$(VERSION)
+	mkdir -p build/sdist/$(notdir $(patsubst %.tar.gz,%,$@))
+	rsync -aL --exclude .svn --exclude /dist --exclude /build --delete ./ build/sdist/$(notdir $(patsubst %.tar.gz,%,$@))
 	mkdir -p dist
-	cd build/sdist; tar -czf $(CURDIR)/$@ $(PKGNAME)-$(VERSION)
+	cd build/sdist; tar -czf $(CURDIR)/$@ $(notdir $(patsubst %.tar.gz,%,$@))
 	@echo "Source tarball is: $@"
 
 rpm: clean pkg/$(NAME).$(DISTRO).spec dist/$(PKGNAME)-$(VERSION).tar.gz
@@ -89,7 +89,7 @@ rpm: clean pkg/$(NAME).$(DISTRO).spec dist/$(PKGNAME)-$(VERSION).tar.gz
 				 --define "_srcrpmdir %{_topdir}/$(NAME)" \
 				 --define "_tmppath %{_topdir}/TMP" \
 				 --define "_builddir %{_topdir}/BUILD" \
-				 $(if $(RELEASE),,--define "dev .1.dev$(SVN_REV)") \
+				 $(if $(RELEASE),,--define "dev .$(if $(BUILDNUMBER),$(BUILDNUMBER),1).g$(GIT_CHSET)") \
 				 --define "dist .$(DIST_TAG)" \
 				 $(RPMBUILD_OPTS) \
 				 build/rpm/$(NAME)/$(PKGNAME).spec
