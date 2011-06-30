@@ -177,6 +177,23 @@ $Functions{table_used_free} = sub {
     return ("UNKNOWN","UNKNOWN: OID $freeOID.$index not found") unless $Primitive->{"checkOIDVal"}->($free);
     return $Primitive->{"thresholdIt"}->(($used*100.0)/($free+$used), $warnThresh, $critThresh, $caption, $Primitive);
 };
+$Functions{table_total_free} = sub {
+    my ($parameters, $variables, $response, $debug, $Primitive)=@_;
+
+    my $name         = $parameters->[0];
+    my $warnThresh   = $parameters->[1];
+    my $critThresh   = $parameters->[2];
+    my $caption      = $parameters->[3] || "%f%%";
+    my $totalOID     = (split('/',$variables->[0]))[1];
+    my $freeOID = (split('/',$variables->[1]))[1];
+
+    # Get the index
+    my $total=$response->{"$totalOID"};
+    my $free=$response->{"$freeOID"};
+    return ("UNKNOWN","UNKNOWN: OID $totalOID not found") unless $Primitive->{"checkOIDVal"}->($total);
+    return ("UNKNOWN","UNKNOWN: OID $freeOID not found") unless $Primitive->{"checkOIDVal"}->($free);
+    return $Primitive->{"thresholdIt"}->(($free*100.0)/($total), $warnThresh, $critThresh, $caption, $Primitive);
+};
 $Functions{table_mult_factor} = sub {
     my ($parameters, $variables, $response, $debug, $Primitive)=@_;
 
