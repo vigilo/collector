@@ -68,6 +68,7 @@ clean:
 
 
 GIT_CHSET = $(shell git rev-parse --short HEAD)
+GIT_CHSET_COUNT = $(shell git rev-list --no-merges --count HEAD)
 
 sdist: dist/$(PKGNAME)-$(VERSION)$(if $(RELEASE),,.g$(GIT_CHSET)).tar.gz
 dist/$(PKGNAME)-$(VERSION).tar.gz dist/$(PKGNAME)-$(VERSION)%.tar.gz:
@@ -89,7 +90,7 @@ rpm: clean pkg/$(NAME).$(DISTRO).spec dist/$(PKGNAME)-$(VERSION).tar.gz
 				 --define "_srcrpmdir %{_topdir}/$(NAME)" \
 				 --define "_tmppath %{_topdir}/TMP" \
 				 --define "_builddir %{_topdir}/BUILD" \
-				 $(if $(RELEASE),,--define "dev .$(if $(BUILDNUMBER),$(BUILDNUMBER),1).g$(GIT_CHSET)") \
+				 $(if $(RELEASE),,--define "dev .$(GIT_CHSET_COUNT).g$(GIT_CHSET)") \
 				 --define "dist .$(DIST_TAG)" \
 				 $(RPMBUILD_OPTS) \
 				 build/rpm/$(NAME)/$(PKGNAME).spec
