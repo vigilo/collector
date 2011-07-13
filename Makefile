@@ -69,6 +69,7 @@ clean:
 
 GIT_CHSET = $(shell git rev-parse --short HEAD)
 GIT_CHSET_COUNT = $(shell git rev-list --no-merges --count HEAD)
+RELEASE_TAG = $(if $(RELEASE),1,0.$(GIT_CHSET_COUNT).g$(GIT_CHSET))
 
 sdist: dist/$(PKGNAME)-$(VERSION)$(if $(RELEASE),,.g$(GIT_CHSET)).tar.gz
 dist/$(PKGNAME)-$(VERSION).tar.gz dist/$(PKGNAME)-$(VERSION)%.tar.gz:
@@ -81,8 +82,8 @@ dist/$(PKGNAME)-$(VERSION).tar.gz dist/$(PKGNAME)-$(VERSION)%.tar.gz:
 rpm: clean pkg/$(NAME).$(DISTRO).spec dist/$(PKGNAME)-$(VERSION).tar.gz
 	mkdir -p build/rpm/{$(NAME),BUILD,TMP}
 	mv dist/$(PKGNAME)-$(VERSION).tar.gz build/rpm/$(NAME)/
-	sed -e 's/@VERSION@/'`cat VERSION.txt`'/g' pkg/$(NAME).$(DISTRO).spec \
-		> build/rpm/$(NAME)/$(PKGNAME).spec
+	sed -e 's/@VERSION@/'`cat VERSION.txt`'/;s/@RELEASE@/$(RELEASE_TAG)/' \
+		pkg/$(NAME).$(DISTRO).spec > build/rpm/$(NAME)/$(PKGNAME).spec
 	rpmbuild -ba --define "_topdir $(CURDIR)/build/rpm" \
 				 --define "_sourcedir %{_topdir}/$(NAME)" \
 				 --define "_specdir %{_topdir}/$(NAME)" \
@@ -90,7 +91,6 @@ rpm: clean pkg/$(NAME).$(DISTRO).spec dist/$(PKGNAME)-$(VERSION).tar.gz
 				 --define "_srcrpmdir %{_topdir}/$(NAME)" \
 				 --define "_tmppath %{_topdir}/TMP" \
 				 --define "_builddir %{_topdir}/BUILD" \
-				 $(if $(RELEASE),,--define "dev .$(GIT_CHSET_COUNT).g$(GIT_CHSET)") \
 				 --define "dist .$(DIST_TAG)" \
 				 $(RPMBUILD_OPTS) \
 				 build/rpm/$(NAME)/$(PKGNAME).spec
