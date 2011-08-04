@@ -977,6 +977,13 @@ sub send2RemoteNagios($)
     my $sock;
     my $message;
 
+    # If no message needs to be sent to a remote Nagios server,
+    # don't even try to open the connector's UNIX socket.
+    if (not scalar @results)
+    {
+        return (0);
+    }
+
     if (! ($sock = IO::Socket::UNIX->new( Type => IO::Socket::SOCK_STREAM, Peer => $connector_socket )))
     {
         print "CRITICAL: problem opening the UNIX socket in send2RemoteNagios\n";
