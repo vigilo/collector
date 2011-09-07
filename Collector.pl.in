@@ -905,16 +905,37 @@ sub send2Sup
     # Loops over all monitoring services to get the service's state and its output (answer)
     foreach my $k_service (keys %{&supServicesHashRef()})
     {
-        my ($state, $answer) =
-            $Functions::Functions{
-                &supServicesHashRef()->{$k_service}->{'function'}}->(&supServicesHashRef()->{$k_service}->{'parameters'}
-                        ,&supServicesHashRef()->{$k_service}->{'variables'}
-                        ,$response,$debug,\%Functions::Primitive
-                        );
-        $result = {
-            return_code => $ERRORS{$state},
-            plugin_output => $answer,
-        };
+        # If the function to handle the test is not defined,
+        # don't crash but:
+        #  - fill the plugin output with this particular error;
+        #  - fill the Collector ouput (if possible).
+        if ( ! defined $Functions::Functions{&supServicesHashRef()->{$k_service}->{'function'}}) {
+            if ($state eq "OK"){
+                $state = 'UNKNOWN';
+                $answer = "UNKNOWN: in test \"$k_service\", " .
+                          "perl function \"" .
+                          &supServicesHashRef()->{$k_service}->{'function'} .
+                          "\" not found\n";
+            }
+            $result = {
+                return_code => $ERRORS{'UNKNOWN'},
+                plugin_output => "UNKNOWN: in test \"$k_service\", " .
+                                 "perl function \"" .
+                                 &supServicesHashRef()->{$k_service}->{'function'} .
+                                 "\" not found\n",
+            };
+        }else{
+            my ($state, $answer) =
+                $Functions::Functions{
+                    &supServicesHashRef()->{$k_service}->{'function'}
+                }->(&supServicesHashRef()->{$k_service}->{'parameters'}
+                ,&supServicesHashRef()->{$k_service}->{'variables'}
+                ,$response,$debug,\%Functions::Primitive);
+            $result = {
+                return_code => $ERRORS{$state},
+                plugin_output => $answer,
+                };
+        }
         if (&supServicesHashRef()->{$k_service}->{'reRouteFor'})
         {
             $result->{host_name} = &supServicesHashRef()->{$k_service}->{'reRouteFor'}->{'host'};
