@@ -846,7 +846,12 @@ sub send2Metro
                     , $DSList->[$i]->{'variables'}
                     , $response, $debug, \%Functions::Primitive
                     );
-        $msg_tmp="U" if !defined $msg_tmp;
+        $dsname = $DSList->[$i]->{'datasource'};
+        if (!defined $msg_tmp || $msg_tmp eq 'U')
+        {
+            print "send2Metro: $dsname is unknown, not sending\n" if ($debug);
+            next;
+        }
         if ($DSList->[$i]->{'reRouteFor'})
         {
             $hostname = $DSList->[$i]->{'reRouteFor'}->{'hostname'};
@@ -855,7 +860,6 @@ sub send2Metro
         {
             $hostname = $host::Host{'hostname'};
         }
-        $dsname = $DSList->[$i]->{'datasource'};
         $message = "perf|$now|$hostname|$dsname|$msg_tmp\n";
         $sock->send($message);
         print "send2Metro: $message" if ($debug);
