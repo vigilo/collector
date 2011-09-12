@@ -68,7 +68,7 @@ clean:
 
 
 GIT_CHSET = $(shell git log -1 --format=format:%h .)
-GIT_CHSET_COUNT = $(shell git rev-list --no-merges --count $(GIT_CHSET))
+GIT_CHSET_COUNT = $(shell git rev-list --no-merges $(GIT_CHSET) | wc -l | xargs expr 1 +)
 RELEASE_TAG = $(if $(RELEASE),1,0.$(GIT_CHSET_COUNT).g$(GIT_CHSET))
 
 sdist: dist/$(PKGNAME)-$(VERSION)$(if $(RELEASE),,.g$(GIT_CHSET)).tar.gz
