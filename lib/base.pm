@@ -98,7 +98,13 @@ our %Primitive = (
     {
         if ($OID =~ /^$where\./)
         {
-            if ($response->{$OID} =~ /^${key}\000?$/)
+            my $content = $response->{$OID};
+            if ($content =~ /^0x/){
+                # it's looks like an hexadecimal response, let's convert it into BYTE
+                $content = substr($response->{$OID}, 2);
+                $content =~ s/([a-fA-F0-9][a-fA-F0-9])/chr(hex($1))/eg;
+            }
+            if ($content =~ /^${key}\000?$/)
             {
                 $OID =~ /\.(\d+)$/; # Got it
                 return $1;
@@ -118,7 +124,13 @@ our %Primitive = (
     {
         if ($OID =~ /^$where\./)
         {
-            if ($response->{$OID} =~ /^${key}\000?$/)
+            my $content = $response->{$OID};
+            if ($content =~ /^0x/){
+                # it's looks like an hexadecimal response, let's convert it into BYTE
+                $content = substr($response->{$OID}, 2);
+                $content =~ s/([a-fA-F0-9][a-fA-F0-9])/chr(hex($1))/eg;
+            }
+            if ($content =~ /^${key}\000?$/)
             {
                 $OID =~ /\.(\d+)$/; # Got it
                 push @indexes,$1;
