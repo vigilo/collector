@@ -25,6 +25,7 @@ package Functions;
 use strict;
 use warnings;
 require Exporter;
+use Math::RPN;
 use vars qw(@ISA @EXPORT $VERSION);
 @ISA=qw(Exporter);
 @EXPORT= qw( %Functions );
@@ -379,6 +380,31 @@ $Functions{statusWithMessage} = sub {
     return ("OK","OK: $msgValue") if $stateValue == $okValue;
     return ("WARNING","WARNING: $msgValue") if $stateValue == $warnValue;
     return ("CRITICAL","CRITICAL: $msgValue");
+};
+$Functions{sup_rpn} = sub {
+    my ($parameters, $variables, $response, $debug, $Primitive)=@_;
+
+    my $name       = $parameters->[0];
+    my $warnThresh = $parameters->[1];
+    my $critThresh = $parameters->[2];
+    my $caption    = $parameters->[3];
+
+    my @formula = @$parameters;
+    @formula = @formula[4..$#formula];
+    # remplacement des OIDs par leur valeur dans la formule
+    foreach my $cmpid (0 .. $#formula)
+    {
+        my $component = $formula[$cmpid];
+        if (substr($component, 0, 1) eq ".")
+        { # commence par un "." -> c'est un OID
+            return ("UNKNOWN","UNKNOWN: $name cannot be computed (can't find $component)") unless exists($response->{$component});
+            return ("UNKNOWN","UNKNOWN: $name cannot be computed (wrong value for $component)") unless $Primitive->{"checkOIDVal"}->($response->{$component});
+            $formula[$cmpid] = $response->{$component};
+        }
+    }
+    # calcul
+    my $result = rpn(@formula);
+    return $Primitive->{"thresholdIt"}->($result, $warnThresh, $critThresh, $caption, $Primitive);
 };
 
 

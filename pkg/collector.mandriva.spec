@@ -18,6 +18,7 @@ Requires:   perl-Net-SNMP
 Requires:   perl-Digest-HMAC
 Requires:   perl-Digest-SHA1
 Requires:   perl-Nagios-Cmd
+Requires:   perl-Math-RPN
 Requires:   nagios
 
 

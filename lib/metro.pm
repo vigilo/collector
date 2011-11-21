@@ -25,6 +25,7 @@ package Functions;
 use strict;
 use warnings;
 require Exporter;
+use Math::RPN;
 use vars qw(@ISA @EXPORT $VERSION);
 @ISA=qw(Exporter);
 @EXPORT= qw( %Functions );
@@ -174,6 +175,24 @@ $Functions{m_walk_grep_count} = sub {
     }
     return ("UNKNOWN", "U") if ($matches == 0);
     return ("OK", $value);
+};
+$Functions{m_rpn} = sub {
+    my ($parameters, $variables, $response, $debug, $Primitive)=@_;
+
+    my @formula = @$parameters;
+    # remplacement des OIDs par leur valeur dans la formule
+    foreach my $cmpid (0 .. $#formula)
+    {
+        my $component = $formula[$cmpid];
+        if (substr($component, 0, 1) eq ".")
+        { # commence par un "." -> c'est un OID
+            return ("UNKNOWN","U") unless exists($response->{$component});
+            return ("UNKNOWN","U") unless $Primitive->{"checkOIDVal"}->($response->{$component});
+            $formula[$cmpid] = $response->{$component};
+        }
+    }
+    # calcul
+    return ('OK', rpn(@formula));
 };
 
 
