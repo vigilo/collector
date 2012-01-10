@@ -1017,7 +1017,7 @@ sub send2RemoteNagios($)
     }
     foreach my $result (@results)
     {
-        $message = "command|$now|PROCESS_SERVICE_CHECK_RESULT|"
+        $message = "nagios|$now|PROCESS_SERVICE_CHECK_RESULT|"
                   .$result->{host_name}.";".$result->{svc_description}.";"
                   .$result->{return_code}.";".$result->{plugin_output}."\n";
         $sock->send($message);
