@@ -193,7 +193,7 @@ $Functions{table_total_free} = sub {
     my $free=$response->{"$freeOID"};
     return ("UNKNOWN","UNKNOWN: OID $totalOID not found") unless $Primitive->{"checkOIDVal"}->($total);
     return ("UNKNOWN","UNKNOWN: OID $freeOID not found") unless $Primitive->{"checkOIDVal"}->($free);
-    return $Primitive->{"thresholdIt"}->(($free*100.0)/($total), $warnThresh, $critThresh, $caption, $Primitive);
+    return $Primitive->{"thresholdIt"}->((($total-$free)*100.0)/($total), $warnThresh, $critThresh, $caption, $Primitive);
 };
 $Functions{table_mult_factor} = sub {
     my ($parameters, $variables, $response, $debug, $Primitive)=@_;
