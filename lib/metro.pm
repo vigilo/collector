@@ -194,6 +194,18 @@ $Functions{m_rpn} = sub {
     # calcul
     return ('OK', rpn(@formula));
 };
+$Functions{m_valueAndPercentageToValue} = sub {
+    # permet de calculer une valeur brute à partir d'une valeur brute et d'un pourcentage de cette valeur
+    my ($parameters, $variables, $response, $debug, $Primitive)=@_;
+
+    my $OIDval = (split('/',$variables->[0]))[1];
+    my $OIDper = (split('/',$variables->[1]))[1];
+    return ("UNKNOWN","U") unless exists($response->{$OIDval});
+    return ("UNKNOWN","U") unless exists($response->{$OIDper});
+    return ("UNKNOWN","U") unless $Primitive->{"checkOIDVal"}->($response->{$OIDval});
+    return ("UNKNOWN","U") unless $Primitive->{"checkOIDVal"}->($response->{$OIDper});
+    return ('OK',$response->{$OIDval}*$response->{$OIDper}/100);
+};
 
 
 1;
