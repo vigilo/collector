@@ -20,7 +20,7 @@ pkg/cronjobs: pkg/cronjobs.in
 
 man: Collector.1
 Collector.1: Collector
-	perldoc -oMan -d $@ $^
+	perldoc -oMan $^ > $@
 
 install: $(INFILES)
 	-mkdir -p $(DESTDIR)$(NPLUGDIR) $(DESTDIR)$(CLIBDIR) $(DESTDIR)$(CONFDIR)
