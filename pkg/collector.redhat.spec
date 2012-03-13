@@ -32,17 +32,17 @@ This application is part of the Vigilo Project <http://vigilo-project.org>
 
 %build
 make \
-	LIBDIR=%{_libdir} \
-	SYSCONFDIR=%{_sysconfdir} \
-	LOCALSTATEDIR=%{_localstatedir}
+    LIBDIR=%{_libdir} \
+    SYSCONFDIR=%{_sysconfdir} \
+    LOCALSTATEDIR=%{_localstatedir}
 
 %install
 rm -rf $RPM_BUILD_ROOT
 make install \
-	DESTDIR=$RPM_BUILD_ROOT \
-	LIBDIR=%{_libdir} \
-	SYSCONFDIR=%{_sysconfdir} \
-	LOCALSTATEDIR=%{_localstatedir}
+    DESTDIR=$RPM_BUILD_ROOT \
+    LIBDIR=%{_libdir} \
+    SYSCONFDIR=%{_sysconfdir} \
+    LOCALSTATEDIR=%{_localstatedir}
 
 
 %clean
@@ -52,6 +52,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(644,root,root,755)
 %doc COPYING.txt README.txt TODO host.example
 %{_libdir}/%{name}
+%attr(755,root,root) %{_libdir}/%{name}/cleanup.sh
 %attr(755,root,root) %{_libdir}/nagios/plugins/*
 %dir %{_sysconfdir}/vigilo
 %config(noreplace) %{_sysconfdir}/vigilo/%{module}
@@ -62,8 +63,8 @@ rm -rf $RPM_BUILD_ROOT
 * Fri Mar 05 2010 Aurelien Bompard <aurelien.bompard@c-s.fr>
 - new release
 
-* Thu Jul 30 2009 Aurelien Bompard <aurelien.bompard@c-s.fr> - 1.5-2
+* Thu Jul 30 2009 Aurelien Bompard <aurelien.bompard@c-s.fr>
 - rename
 
-* Fri Mar 20 2009  Thomas Burguiere <thomas.burguiere@c-s.fr> - 1.5-1
+* Fri Mar 20 2009  Thomas Burguiere <thomas.burguiere@c-s.fr>
 - first creation of the RPM from debian archive
