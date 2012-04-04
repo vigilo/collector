@@ -4,7 +4,7 @@
 ## base.pm : PERL function package, Customizable functions for the Collector
 ##           Nagios Plugin
 ##
-## Copyright (C) 2006-2011 CS-SI
+## Copyright (C) 2006-2012 CS-SI
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
