@@ -32,9 +32,8 @@ install: $(INFILES)
 	install -m 755 -p -D pkg/cleanup.sh $(DESTDIR)$(CLIBDIR)/cleanup.sh
 	install -m 644 -p -D pkg/cronjobs $(DESTDIR)/etc/cron.d/$(PKGNAME).cron
 
-clean:
+clean: clean_common
 	rm -f $(INFILES)
-	rm -rf build
 
 
 .PHONY: all install clean man
