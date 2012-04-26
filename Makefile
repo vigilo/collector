@@ -35,5 +35,6 @@ install: $(INFILES)
 clean: clean_common
 	rm -f $(INFILES)
 
+doc: sphinxdoc
 
-.PHONY: all install clean man
+.PHONY: all install clean man doc
