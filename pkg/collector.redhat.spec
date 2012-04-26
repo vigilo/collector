@@ -6,7 +6,7 @@ Version:    @VERSION@
 Release:    @RELEASE@%{?dist}
 Source0:    %{name}-%{version}.tar.gz
 URL:        http://www.projet-vigilo.org
-Group:      System/Servers
+Group:      Applications/System
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-build
 License:    GPLv2
 #Buildarch:  noarch  # on installe dans _libdir

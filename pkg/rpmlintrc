@@ -1,0 +1,6 @@
+# -*- python -*-
+
+from Config import addFilter
+
+addFilter("E: no-binary")
+addFilter("E: empty-debuginfo-package")
