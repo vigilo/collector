@@ -726,13 +726,13 @@ sub getOIDValues
         $responseWalkOIDs = &snmpWalk(\@snmpOIDs4Walk);
     }
     # Merge hashes
-    if (defined %{$responseWalkOIDs}) {
-        if (defined %{$responseGetOIDs}) {
+    if (%{$responseWalkOIDs}) {
+        if (%{$responseGetOIDs}) {
             %{$response} = (%{$responseGetOIDs}, %{$responseWalkOIDs});
         } else {
             %{$response} = %{$responseWalkOIDs};
         }
-    } elsif (defined %{$responseGetOIDs}) {
+    } elsif (%{$responseGetOIDs}) {
         %{$response} = %{$responseGetOIDs};
     } else {
         $state = 'UNKNOWN';
