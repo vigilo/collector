@@ -685,7 +685,7 @@ None
 sub getOIDValues
 {
     ## Get OIDs for SNMPGet
-    my $responseGetOIDs;
+    my $responseGetOIDs = {};
     if (@snmpOIDs4Get) {
         if (&snmpOIDsPerPDU < $#snmpOIDs4Get) {
             my @snmpOIDs4GetTMP;
@@ -720,7 +720,7 @@ sub getOIDValues
             }
         }
     }
-    my $responseWalkOIDs;
+    my $responseWalkOIDs = {};
     if (@snmpOIDs4Walk) {
         # Get OIDs from SNMPWalk
         $responseWalkOIDs = &snmpWalk(\@snmpOIDs4Walk);
