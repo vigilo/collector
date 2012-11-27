@@ -2,57 +2,40 @@
 # -*- makefile -*-
 
 # Uncomment this to turn on verbose mode.
-#export DH_VERBOSE=1
+export DH_VERBOSE=1
+export DH_OPTIONS=-v
 
-build:
+PKGNAME=$(shell printf "%s" `dpkg-parsechangelog | grep '^Source:' | cut -d: -f2-`)
+VERSION=$(shell printf "%s" `dpkg-parsechangelog | grep '^Version:' | cut -d: -f2-`)
 
-clean:
-	dh_testdir
-	dh_testroot
-	dh_clean 
+%:
+	dh $@ --with sphinxdoc
 
-install: build
-	dh_testdir
-	dh_testroot
-	dh_clean -k 
-	dh_installdirs
-	$(MAKE) install DESTDIR=$(CURDIR)/debian/nagios-plugin-collector
+override_dh_auto_clean:
+	dh_auto_clean -- buildclean
 
+override_dh_auto_build:
 
+override_dh_auto_install:
+	$(MAKE) install DESTDIR=$(CURDIR)/debian/$(PKGNAME)
 
-# Build architecture-independent files here.
-binary-indep: install
-	dh_testdir
-	dh_testroot
-#	dh_installchangelogs 
-	dh_installdocs
-#	dh_installexamples
-#	dh_install
-#	dh_installmenu
-#	dh_installdebconf	
-#	dh_installlogrotate
-#	dh_installemacsen
-#	dh_installpam
-#	dh_installmime
-#	dh_python
-#	dh_installinit
-#	dh_installcron
-#	dh_installinfo
-#	dh_installman
-#	dh_link
-#	dh_strip
-#	dh_compress
-	dh_fixperms
-	dh_perl
-#	dh_makeshlibs
-	dh_installdeb
-	dh_shlibdeps
-	dh_gencontrol
-	dh_md5sums
-	dh_builddeb
+override_dh_auto_test:
 
-# Build architecture-dependent files here.
-binary-arch: install
+override_dh_installdocs:
+ifneq "$(shell dh_listpackages | grep -- -doc)" ""
+	PYTHONPATH=src/ sphinx-build -b html -d doc/_build/doctrees \
+		-D version=$(VERSION) -D release=$(VERSION) \
+		doc/ debian/$(PKGNAME)-doc/usr/share/doc/$(PKGNAME)-doc/html/
+endif
 
-binary: binary-indep
-.PHONY: clean binary-indep binary-arch binary install build
+override_dh_sphinxdoc:
+ifneq "$(shell dh_listpackages | grep -- -doc)" ""
+	dh_sphinxdoc -p $(PKGNAME)-doc
+endif
+
+.PHONY: override_dh_auto_clean \
+		override_dh_auto_build \
+		override_dh_auto_install \
+		override_dh_auto_test \
+		override_dh_installdocs \
+		override_dh_sphinxdoc

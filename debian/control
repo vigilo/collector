@@ -1,14 +1,36 @@
-Source: nagios-plugin-collector
+Source: vigilo-collector
 Section: vigilo
 Priority: extra
-Maintainer: Aurélien BOMPARD <aurelien.bompard@c-s.fr>
-Build-Depends: debhelper (>= 5)
+Maintainer: Vigilo Team <contact@projet-vigilo.org>
+Build-Depends: debhelper (>= 5), perl-doc
 Standards-Version: 3.7.2
 
-Package: nagios-plugin-collector
+Package: vigilo-collector
 Architecture: all
-Depends: nagios2 | nagios3, ${perl:Depends}, libnet-snmp-perl, libcrypt-des-perl, libdigest-hmac-perl, libdigest-sha1-perl
+Suggests: vigilo-collector-doc
+Depends:
+ nagios2 | nagios3,
+ ${perl:Depends},
+ libnet-snmp-perl,
+ libcrypt-des-perl,
+ libdigest-hmac-perl,
+ libdigest-sha1-perl
 Recommends: nsca
 Description: Centralized collector plugin for Nagios
- This plugin collects the SNMP data once and forwards it
- to an UDP port. Its configuration needs to be generated
+ This plugin collects SNMP data for an equipment
+ using as few requests as possible. It then computes
+ states from that data and forwards both states and
+ other (performance) data to other Vigilo components.
+
+Package: vigilo-collector-doc
+Architecture: all
+Section: doc
+Depends: ${sphinxdoc:Depends} ${misc:Depends}
+Description: Centralized collector plugin for Nagios (documentation)
+ This plugin collects SNMP data for an equipment
+ using as few requests as possible. It then computes
+ states from that data and forwards both states and
+ other (performance) data to other Vigilo components.
+ .
+ This package contains documentation about vigilo-collector.
+

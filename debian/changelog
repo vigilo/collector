@@ -1,43 +1,18 @@
-nagios-plugin-collector (1.5) unstable; urgency=low
+vigilo-collector (3.0.0.g6c79943-1) unstable; urgency=low
 
-  * Fix a bug with large tables (increase maxMsgSize).
-    Credits go to Matthieu H. for this one. Thanks.
+  * New upstream release.
 
- -- Aurélien Bompard <aurelien.bompard@c-s.fr>  Tue, 13 Jan 2009 12:01:39 +0100
+ -- François Poirotte <francois.poirotte@c-s.fr>  Sat, 24 Nov 2012 11:39:24 +0100
 
-nagios-plugin-collector (1.4) unstable; urgency=low
+vigilo-collector (3.0.0.g6c79943-1) unstable; urgency=low
 
-  * fix old mode
+  * New upstream release.
 
- -- Aurélien Bompard <aurelien.bompard@c-s.fr>  Wed, 28 Nov 2007 16:56:28 +0100
+ -- François Poirotte <francois.poirotte@c-s.fr>  Sat, 24 Nov 2012 10:36:37 +0100
 
-nagios-plugin-collector (1.3) unstable; urgency=low
+vigilo-collector (2.1.2.dev-g0d9fe29-1) unstable; urgency=low
 
-  * rebuild
+  * New upstream release.
 
- -- Aurélien Bompard <aurelien.bompard@c-s.fr>  Mon, 17 Sep 2007 16:46:11 +0200
-
-nagios-plugin-collector (1.2) unstable; urgency=low
-
-  * Support SNMPv1
-
- -- Aurélien Bompard <aurelien.bompard@c-s.fr>  Thu, 13 Sep 2007 15:15:06 +0200
-
-nagios-plugin-collector (1.1-1) unstable; urgency=low
-
-  * Deal with oidPerPDU
-
- -- Aurélien BOMPARD <aurelien.bompard@c-s.fr>  Thu, 29 Mar 2007 13:30:57 +0200
-
-nagios-plugin-collector (1.0-2) unstable; urgency=low
-
-  *  Add perl dependencies
-
- -- Aurélien BOMPARD <aurelien.bompard@c-s.fr>  Thu, 22 Mar 2007 17:10:09 +0100
-
-nagios-plugin-collector (1.0-1) unstable; urgency=low
-
-  * Initial version
-
- -- Aurélien BOMPARD <aurelien.bompard@c-s.fr>  Tue, 13 Feb 2007 10:52:59 +0100
+ -- François Poirotte <francois.poirotte@c-s.fr>  Sat, 10 Nov 2012 18:10:39 +0100
 
