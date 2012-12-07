@@ -20,17 +20,24 @@ pkg/cronjobs: pkg/cronjobs.in
 
 man: Collector.1
 Collector.1: Collector
+	chmod a+rx ./
 	perldoc -oMan $^ > $@
 
-install: $(INFILES)
+install: install_pkg install_permissions
+
+install_pkg: $(INFILES)
 	-mkdir -p $(DESTDIR)$(NPLUGDIR) $(DESTDIR)$(CLIBDIR) $(DESTDIR)$(CONFDIR)
 	install -m 755 -p Collector $(DESTDIR)$(NPLUGDIR)/Collector
 	install -m 644 -p general.conf $(DESTDIR)$(CONFDIR)/general.conf
 	cp -pr lib/* $(DESTDIR)$(CLIBDIR)/
 	mkdir -p $(DESTDIR)$(CLIBDIR)/ext
-	find $(DESTDIR)$(CLIBDIR) -type d -name .svn -exec rm -rf {} \;
 	install -m 755 -p -D pkg/cleanup.sh $(DESTDIR)$(CLIBDIR)/cleanup.sh
 	install -m 644 -p -D pkg/cronjobs $(DESTDIR)/etc/cron.d/$(PKGNAME).cron
+
+install_permissions:
+	chown root:root -R $(DESTDIR)$(CLIBDIR)
+	find $(DESTDIR)$(CLIBDIR) -type d -exec chmod a+rx {} \;
+	find $(DESTDIR)$(CLIBDIR) -type f -exec chmod a+r  {} \;
 
 clean: clean_common
 	rm -f $(INFILES)

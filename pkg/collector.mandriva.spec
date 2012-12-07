@@ -38,7 +38,7 @@ make \
 
 %install
 rm -rf $RPM_BUILD_ROOT
-make install \
+make install_pkg \
     DESTDIR=$RPM_BUILD_ROOT \
     LIBDIR=%{_libdir} \
     SYSCONFDIR=%{_sysconfdir} \
