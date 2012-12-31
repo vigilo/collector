@@ -1,6 +1,7 @@
 NAME = collector
 
-INFILES = Collector general.conf pkg/cleanup.sh pkg/cronjobs Collector.1
+INFILES = Collector general.conf vigilo-collector.cfg \
+          pkg/cleanup.sh pkg/cronjobs Collector.1
 
 all: $(INFILES)
 
@@ -13,6 +14,8 @@ Collector: Collector.pl.in
 general.conf: general.conf.in
 	sed -e 's,@LIBDIR@,$(LIBDIR),g;s,@SYSCONFDIR@,$(SYSCONFDIR),g;s,@LOCALSTATEDIR@,$(LOCALSTATEDIR),g;s,@CMDPIPE@,$(NAGIOSCMDPIPE),g' \
 		$^ > $@
+vigilo-collector.cfg: vigilo-collector.cfg.in
+	sed -e 's,@PLUGINDIR@,$(NPLUGDIR),g' $^ > $@
 pkg/cleanup.sh: pkg/cleanup.sh.in
 	sed -e 's,@CONFDIR@,$(CONFDIR),g' $^ > $@
 pkg/cronjobs: pkg/cronjobs.in
@@ -27,12 +30,14 @@ install: install_pkg install_permissions
 
 install_pkg: $(INFILES)
 	-mkdir -p $(DESTDIR)$(NPLUGDIR) $(DESTDIR)$(CLIBDIR) $(DESTDIR)$(CONFDIR)
-	install -m 755 -p Collector $(DESTDIR)$(NPLUGDIR)/Collector
-	install -m 644 -p general.conf $(DESTDIR)$(CONFDIR)/general.conf
+	-mkdir -p $(DESTDIR)$(NPCONFDIR) $(DESTDIR)$(SYSCONFDIR)/cron.d
+	install -m 755 -p Collector $(DESTDIR)$(NPLUGDIR)/
+	install -m 644 -p general.conf $(DESTDIR)$(CONFDIR)/
+	install -m 644 -p vigilo-collector.cfg $(DESTDIR)$(NPCONFDIR)/
 	cp -pr lib/* $(DESTDIR)$(CLIBDIR)/
 	mkdir -p $(DESTDIR)$(CLIBDIR)/ext
-	install -m 755 -p -D pkg/cleanup.sh $(DESTDIR)$(CLIBDIR)/cleanup.sh
-	install -m 644 -p -D pkg/cronjobs $(DESTDIR)/etc/cron.d/$(PKGNAME).cron
+	install -m 755 -p pkg/cleanup.sh $(DESTDIR)$(CLIBDIR)/
+	install -m 644 -p pkg/cronjobs $(DESTDIR)$(SYSCONFDIR)/cron.d/$(PKGNAME).cron
 
 install_permissions:
 	chown root:root -R $(DESTDIR)$(CLIBDIR)

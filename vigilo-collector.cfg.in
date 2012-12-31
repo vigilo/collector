@@ -1,0 +1,5 @@
+# Command for Vigilo's Collector.
+define command{
+    command_name    Collector
+    command_line    @PLUGINDIR@/Collector -H '$HOSTNAME$'
+}
