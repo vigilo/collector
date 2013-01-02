@@ -17,20 +17,19 @@ Depends:
  libdigest-sha1-perl
 Recommends: nsca
 Description: Centralized collector plugin for Nagios
- This plugin collects SNMP data for an equipment
- using as few requests as possible. It then computes
- states from that data and forwards both states and
- other (performance) data to other Vigilo components.
+ The Vigilo Collector collects SNMP data for an equipment
+ using as few requests as possible. It then forwards both
+ states and performance data derived from the response to
+ those SNMP requests to other Vigilo components.
 
 Package: vigilo-collector-doc
 Architecture: all
 Section: doc
 Depends: ${sphinxdoc:Depends} ${misc:Depends}
 Description: Centralized collector plugin for Nagios (documentation)
- This plugin collects SNMP data for an equipment
- using as few requests as possible. It then computes
- states from that data and forwards both states and
- other (performance) data to other Vigilo components.
+ The Vigilo Collector collects SNMP data for an equipment
+ using as few requests as possible. It then forwards both
+ states and performance data derived from the response to
+ those SNMP requests to other Vigilo components.
  .
  This package contains documentation about vigilo-collector.
-
