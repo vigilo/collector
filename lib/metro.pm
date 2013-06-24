@@ -44,7 +44,7 @@ $Functions{m_table} = sub {
     my $index = $Primitive->{"lookup"}->($response,$descrOID,$name);
     return ("UNKNOWN","U") if ($index == -1);
     return ("UNKNOWN","U") unless exists($response->{"$OID.$index"});
-    my $value=$response->{"$OID.$index"};
+    my $value = $response->{"$OID.$index"};
     return ("UNKNOWN","U") unless $Primitive->{"checkOIDVal"}->($value);
     return ('OK', $value);
 };
@@ -58,15 +58,39 @@ $Functions{m_table_add} = sub {
     # Get the indexes
     my @indexes = $Primitive->{"lookupMultiple"}->($response,$descrOID,$name);
     return ("UNKNOWN","U") if ($#indexes == -1);
-    my $total=0;
+    my $total = 0;
     my $value;
     foreach my $index (@indexes)
     {
         return ("UNKNOWN","U") unless exists($response->{"$OID.$index"});
-        $value=$response->{"$OID.$index"};
+        $value = $response->{"$OID.$index"};
         return ("UNKNOWN","U") unless $Primitive->{"checkOIDVal"}->($value);
         $total += $value;
     }
+    return ('OK', $total);
+};
+$Functions{m_table_average} = sub {
+    my ($parameters, $variables, $response, $debug, $Primitive)=@_;
+
+    my $name     = $parameters->[0];
+    my $OID      = (split('/',$variables->[0]))[1];
+    my $descrOID = (split('/',$variables->[1]))[1];
+
+    # Get the indexes
+    my @indexes = $Primitive->{"lookupMultiple"}->($response,$descrOID,$name);
+    return ("UNKNOWN","U") if ($#indexes == -1);
+    my $total = 0;
+    my $nb_value = 0;
+    my $value;
+    foreach my $index (@indexes){
+        return ("UNKNOWN","U") unless exists($response->{"$OID.$index"});
+        $value = $response->{"$OID.$index"};
+        return ("UNKNOWN","U") unless $Primitive->{"checkOIDVal"}->($value);
+        $total += $value;
+        $nb_value += 1;
+    }
+    return ("UNKNOWN","U") if ($nb_value == 0);
+    $total = $total / $nb_value;
     return ('OK', $total);
 };
 $Functions{m_table_mult} = sub {
@@ -80,15 +104,15 @@ $Functions{m_table_mult} = sub {
     # Get the indexes
     my @indexes = $Primitive->{"lookupMultiple"}->($response,$descrOID,$name);
     return ("UNKNOWN","U") if ($#indexes == -1);
-    my $total=0;
+    my $total = 0;
     my $val1;
     my $val2;
     foreach my $index (@indexes)
     {
         return ("UNKNOWN","U") unless exists($response->{"$val1OID.$index"});
         return ("UNKNOWN","U") unless exists($response->{"$val2OID.$index"});
-        $val1=$response->{"$val1OID.$index"};
-        $val2=$response->{"$val2OID.$index"};
+        $val1 = $response->{"$val1OID.$index"};
+        $val2 = $response->{"$val2OID.$index"};
         return ("UNKNOWN","U") unless $Primitive->{"checkOIDVal"}->($val1);
         return ("UNKNOWN","U") unless $Primitive->{"checkOIDVal"}->($val2);
         $total += $val1 * $val2;
@@ -159,8 +183,8 @@ $Functions{m_walk_grep_count} = sub {
     my $pattern = $parameters->[0];
     my $walk    = (split('/',$variables->[0]))[1];
 
-    my $value=0;
-    my $matches=0;
+    my $value = 0;
+    my $matches = 0;
     # Get the ifIndex
     foreach my $OID (keys %{$response})
     {

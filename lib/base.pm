@@ -228,7 +228,7 @@ our %Primitive = (
         { # If wrong value for authProto, say warning
             $state = 'WARNING';
         }
-    } 
+    }
     ## Check operational status
     elsif ( $ifOperStatus == 2 )
     {

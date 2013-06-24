@@ -111,7 +111,7 @@ $Functions{table} = sub {
     my $index = $Primitive->{"lookup"}->($response,$descrOID,$name);
     return ("UNKNOWN","UNKNOWN: $name not found in $descrOID") if ($index == -1);
     return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $OID.$index") unless exists($response->{"$OID.$index"});
-    my $value=$response->{"$OID.$index"};
+    my $value = $response->{"$OID.$index"};
     return ("UNKNOWN","UNKNOWN: OID $OID.$index not found") unless $Primitive->{"checkOIDVal"}->($value);
     return $Primitive->{"thresholdIt"}->($value, $warnThresh, $critThresh, $caption, $Primitive);
 };
@@ -130,7 +130,7 @@ $Functions{table_factor} = sub {
     my $index = $Primitive->{"lookup"}->($response,$descrOID,$name);
     return ("UNKNOWN","UNKNOWN: $name not found in $descrOID") if ($index == -1);
     return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $OID.$index") unless exists($response->{"$OID.$index"});
-    my $value=$response->{"$OID.$index"};
+    my $value = $response->{"$OID.$index"};
     return ("UNKNOWN","UNKNOWN: OID $OID.$index not found") unless $Primitive->{"checkOIDVal"}->($value);
     return $Primitive->{"thresholdIt"}->($value * $factor, $warnThresh, $critThresh, $caption, $Primitive);
 };
@@ -150,8 +150,8 @@ $Functions{table_mult} = sub {
     return ("UNKNOWN","UNKNOWN: $name not found in $descrOID") if ($index == -1);
     return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $val1OID.$index") unless exists($response->{"$val1OID.$index"});
     return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $val2OID.$index") unless exists($response->{"$val2OID.$index"});
-    my $val1=$response->{"$val1OID.$index"};
-    my $val2=$response->{"$val2OID.$index"};
+    my $val1 = $response->{"$val1OID.$index"};
+    my $val2 = $response->{"$val2OID.$index"};
     return ("UNKNOWN","UNKNOWN: OID $val1OID.$index not found") unless $Primitive->{"checkOIDVal"}->($val1);
     return ("UNKNOWN","UNKNOWN: OID $val2OID.$index not found") unless $Primitive->{"checkOIDVal"}->($val2);
     return $Primitive->{"thresholdIt"}->($val1*$val2, $warnThresh, $critThresh, $caption, $Primitive);
@@ -172,8 +172,8 @@ $Functions{table_used_free} = sub {
     return ("UNKNOWN","UNKNOWN: $name not found in $descrOID") if ($index == -1);
     return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $usedOID.$index") unless exists($response->{"$usedOID.$index"});
     return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $freeOID.$index") unless exists($response->{"$freeOID.$index"});
-    my $used=$response->{"$usedOID.$index"};
-    my $free=$response->{"$freeOID.$index"};
+    my $used = $response->{"$usedOID.$index"};
+    my $free = $response->{"$freeOID.$index"};
     return ("UNKNOWN","UNKNOWN: OID $usedOID.$index not found") unless $Primitive->{"checkOIDVal"}->($used);
     return ("UNKNOWN","UNKNOWN: OID $freeOID.$index not found") unless $Primitive->{"checkOIDVal"}->($free);
     return $Primitive->{"thresholdIt"}->(($used*100.0)/($free+$used), $warnThresh, $critThresh, $caption, $Primitive);
@@ -181,16 +181,16 @@ $Functions{table_used_free} = sub {
 $Functions{table_total_free} = sub {
     my ($parameters, $variables, $response, $debug, $Primitive)=@_;
 
-    my $name         = $parameters->[0];
-    my $warnThresh   = $parameters->[1];
-    my $critThresh   = $parameters->[2];
-    my $caption      = $parameters->[3] || "%f%%";
-    my $totalOID     = (split('/',$variables->[0]))[1];
-    my $freeOID = (split('/',$variables->[1]))[1];
+    my $name       = $parameters->[0];
+    my $warnThresh = $parameters->[1];
+    my $critThresh = $parameters->[2];
+    my $caption    = $parameters->[3] || "%f%%";
+    my $totalOID   = (split('/',$variables->[0]))[1];
+    my $freeOID    = (split('/',$variables->[1]))[1];
 
     # Get the index
-    my $total=$response->{"$totalOID"};
-    my $free=$response->{"$freeOID"};
+    my $total = $response->{"$totalOID"};
+    my $free  = $response->{"$freeOID"};
     return ("UNKNOWN","UNKNOWN: OID $totalOID not found") unless $Primitive->{"checkOIDVal"}->($total);
     return ("UNKNOWN","UNKNOWN: OID $freeOID not found") unless $Primitive->{"checkOIDVal"}->($free);
     return $Primitive->{"thresholdIt"}->((($total-$free)*100.0)/($total), $warnThresh, $critThresh, $caption, $Primitive);
@@ -212,8 +212,8 @@ $Functions{table_mult_factor} = sub {
     return ("UNKNOWN","UNKNOWN: $name not found in $descrOID") if ($index == -1);
     return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $val1OID.$index") unless exists($response->{"$val1OID.$index"});
     return ("UNKNOWN", "UNKNOWN: unable to collect value for OID $val2OID.$index") unless exists($response->{"$val2OID.$index"});
-    my $val1=$response->{"$val1OID.$index"};
-    my $val2=$response->{"$val2OID.$index"};
+    my $val1 = $response->{"$val1OID.$index"};
+    my $val2 = $response->{"$val2OID.$index"};
     return ("UNKNOWN","UNKNOWN: OID $val1OID.$index not found") unless $Primitive->{"checkOIDVal"}->($val1);
     return ("UNKNOWN","UNKNOWN: OID $val2OID.$index not found") unless $Primitive->{"checkOIDVal"}->($val2);
     return $Primitive->{"thresholdIt"}->($val1 * $val2 * $factor, $warnThresh, $critThresh, $caption, $Primitive);
@@ -243,10 +243,10 @@ $Functions{ifOperStatus} = sub {
     my $interfaceName = $parameters->[1];
     my $adminWarn     = $parameters->[2] || 'w';
     my $dormantWarn   = $parameters->[3] || 'c';
-    my $ifDescrOID    = (split('/',$variables->[0]))[1];
+    my $ifDescrOID       = (split('/',$variables->[0]))[1];
     my $ifAdminStatusOID = (split('/',$variables->[1]))[1];
     my $ifOperStatusOID  = (split('/',$variables->[2]))[1];
-    my $ifAliasOID    = (split('/',$variables->[3]))[1];
+    my $ifAliasOID       = (split('/',$variables->[3]))[1];
 
     my ($state, $answer);
     my $ifIndex = $Primitive->{"lookup"}->($response,$ifDescrOID,$interface);
@@ -270,10 +270,10 @@ $Functions{staticIfOperStatus} = sub {
     my $interfaceName = $parameters->[1];
     my $adminWarn     = $parameters->[2] || 'w';
     my $dormantWarn   = $parameters->[3] || 'c';
-    my $ifDescrOID    = (split('/',$variables->[0]))[1];
+    my $ifDescrOID       = (split('/',$variables->[0]))[1];
     my $ifAdminStatusOID = (split('/',$variables->[1]))[1];
     my $ifOperStatusOID  = (split('/',$variables->[2]))[1];
-    my $ifAliasOID    = (split('/',$variables->[3]))[1];
+    my $ifAliasOID       = (split('/',$variables->[3]))[1];
 
     my ($state, $answer);
 
@@ -302,10 +302,10 @@ $Functions{storage} = sub {
     my $warnThresh        = $parameters->[1];
     my $critThresh        = $parameters->[2];
     my $percent           = $parameters->[3];
-    my $hrStorageDescrOID = (split('/',$variables->[0]))[1];
+    my $hrStorageDescrOID           = (split('/',$variables->[0]))[1];
     my $hrStorageAllocationUnitsOID = (split('/',$variables->[1]))[1];
-    my $hrStorageSizeOID  = (split('/',$variables->[2]))[1];
-    my $hrStorageUsedOID  = (split('/',$variables->[3]))[1];
+    my $hrStorageSizeOID            = (split('/',$variables->[2]))[1];
+    my $hrStorageUsedOID            = (split('/',$variables->[3]))[1];
 
     my $hrIndex = $Primitive->{"lookup"}->($response,$hrStorageDescrOID,$partition);
     return ("UNKNOWN","Partition name ($partition) not found in hrStorageDescr") if ($hrIndex == -1);
@@ -338,6 +338,34 @@ $Functions{storage} = sub {
         return $Primitive->{"thresholdIt"}->($freeBytes,"@".($warnThresh*1024*1024),"@".($critThresh*1024*1024),"Usage: %d Bytes free ($freePercentage)", $Primitive);
     }
 };
+$Functions{table_average} = sub {
+    my ($parameters, $variables, $response, $debug, $Primitive)=@_;
+
+    my $pattern    = $parameters->[0];
+    my $warnThresh = $parameters->[1];
+    my $critThresh = $parameters->[2];
+    my $caption    = $parameters->[3] || "%s";
+    my $OID        = (split('/',$variables->[0]))[1];
+    my $descrOID   = (split('/',$variables->[1]))[1];
+    my $total = 0;
+    my $value = 0;
+    my $nb_value = 0;
+
+    # Get the index
+    my @indexes = $Primitive->{"lookupMultiple"}->($response,$descrOID,$pattern);
+    return ("UNKNOWN","UNKNOWN: $pattern not found in $descrOID") if ($#indexes == -1);
+    foreach my $index (@indexes)
+    {
+        return ("UNKNOWN","UNKNOWN: OID $OID.$index not found") unless exists($response->{"$OID.$index"});
+        $value = $response->{"$OID.$index"};
+        return ("UNKNOWN","UNKNOWN: OID $OID.$index not found") unless $Primitive->{"checkOIDVal"}->($value);
+        $total += $value;
+        $nb_value += 1;
+    }
+    return ("UNKNOWN","UNKNOWN: OID $descrOID not found") if ($nb_value == 0);
+    $total = $total / $nb_value
+    return $Primitive->{"thresholdIt"}->($total, $warnThresh, $critThresh, $caption, $Primitive);
+};
 $Functions{walk_grep_count} = sub {
     my ($parameters, $variables, $response, $debug, $Primitive)=@_;
 
@@ -347,7 +375,7 @@ $Functions{walk_grep_count} = sub {
     my $caption    = $parameters->[3] || "%d occurences";
     my $walk       = (split('/',$variables->[0]))[1];
 
-    my $value=0;
+    my $value = 0;
     # Get the ifIndex
     foreach my $OID (keys %{$response})
     {
