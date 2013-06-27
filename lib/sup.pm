@@ -363,7 +363,7 @@ $Functions{table_average} = sub {
         $nb_value += 1;
     }
     return ("UNKNOWN","UNKNOWN: OID $descrOID not found") if ($nb_value == 0);
-    $total = $total / $nb_value
+    $total = $total / $nb_value;
     return $Primitive->{"thresholdIt"}->($total, $warnThresh, $critThresh, $caption, $Primitive);
 };
 $Functions{walk_grep_count} = sub {
