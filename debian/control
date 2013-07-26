@@ -14,7 +14,9 @@ Depends:
  libnet-snmp-perl,
  libcrypt-des-perl,
  libdigest-hmac-perl,
- libdigest-sha1-perl
+ libdigest-sha1-perl,
+ libmath-rpn-perl,
+ libnagios-cmd-perl
 Recommends: nsca
 Description: Centralized collector plugin for Nagios
  The Vigilo Collector collects SNMP data for an equipment
