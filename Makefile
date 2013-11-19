@@ -37,7 +37,7 @@ install_pkg: $(INFILES)
 	cp -pr lib/* $(DESTDIR)$(CLIBDIR)/
 	mkdir -p $(DESTDIR)$(CLIBDIR)/ext
 	install -m 755 -p pkg/cleanup.sh $(DESTDIR)$(CLIBDIR)/
-	install -m 644 -p pkg/cronjobs $(DESTDIR)$(SYSCONFDIR)/cron.d/$(PKGNAME).cron
+	install -m 644 -p pkg/cronjobs $(DESTDIR)$(SYSCONFDIR)/cron.d/$(PKGNAME)$(CRONEXT)
 
 install_permissions:
 	chown root:root -R $(DESTDIR)$(CLIBDIR)
