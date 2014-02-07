@@ -213,7 +213,7 @@ par ce module.
 ^^^^^^^^^^^^^^^
 Retourne la valeur, sans aucune modification.
 
-..  ifconfig:: project.endswith('Enterprise')
+..  only:: enterprise
 
     ..  _`m_ciscoQOS`:
 
@@ -316,7 +316,7 @@ susceptibles d'être retournés par les fonctions de ce module.
 Le reste de cette section décrit les différentes fonctions proposées
 par ce module.
 
-..  ifconfig:: project.endswith('Enterprise')
+..  only:: enterprise
 
     ..  _`alcaltelFans`:
 
@@ -440,7 +440,7 @@ de l'interface.
 Utilise ensuite la fonction :ref:`genericIfOperStatus` pour déterminer l'état
 qui doit être retourner à Nagios.
 
-..  ifconfig:: project.endswith('Enterprise')
+..  only:: enterprise
 
     ..  _`ifOperStatus_ISG`:
 
@@ -534,7 +534,7 @@ qui doit être retourner à Nagios.
 Multiplie l'OID par le facteur et compare le résultat par rapport aux limites
 indiquées grâce à la fonction :ref:`thresholdIt`.
 
-..  ifconfig:: project.endswith('Enterprise')
+..  only:: enterprise
 
     ..  _`solLMSensorsPsus`:
 
@@ -663,7 +663,7 @@ et *critical* grâce à la fonction :ref:`thresholdIt`.
 Cherche le motif demandé dans les valeurs du sous-arbre de recherche
 et compare le nombre de correspondances aux limites grâce à :ref:`thresholdIt`.
 
-..  ifconfig:: project.endswith('Enterprise')
+..  only:: enterprise
 
     ..  _`winsvc`:
 
