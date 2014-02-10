@@ -430,7 +430,7 @@ par ce module.
     Utilise :ref:`genericHW` pour retourner l'état des capteurs de température
     sur du matériel HP.
 
-    ..  _`ifOperStatus`:
+..  _`ifOperStatus`:
 
 ``ifOperStatus``
 ^^^^^^^^^^^^^^^^
