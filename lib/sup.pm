@@ -338,6 +338,32 @@ $Functions{storage} = sub {
         return $Primitive->{"thresholdIt"}->($freeBytes,"@".($warnThresh*1024*1024),"@".($critThresh*1024*1024),"Usage: %d Bytes free ($freePercentage)", $Primitive);
     }
 };
+$Functions{average} = sub {
+    my ($parameters, $variables, $response, $debug, $Primitive)=@_;
+
+    my $warnThresh = $parameters->[0];
+    my $critThresh = $parameters->[1];
+    my $caption    = $parameters->[2] || "%s";
+    my $OID        = (split('/',$variables->[0]))[1];
+    my $total = 0;
+    my $value = 0;
+    my $nb_value = 0;
+
+    # Get the index
+    my @indexes = $Primitive->{"lookupMultipleIndex"}->($response,$OID);
+    return ("UNKNOWN","UNKNOWN: $OID not found") if ($#indexes == -1);
+    foreach my $index (@indexes)
+    {
+        return ("UNKNOWN","UNKNOWN: OID $OID.$index not found") unless exists($response->{"$OID.$index"});
+        $value = $response->{"$OID.$index"};
+        return ("UNKNOWN","UNKNOWN: OID $OID.$index not found") unless $Primitive->{"checkOIDVal"}->($value);
+        $total += $value;
+        $nb_value += 1;
+    }
+    return ("UNKNOWN","UNKNOWN: OID $OID not found") if ($nb_value == 0);
+    $total = $total / $nb_value;
+    return $Primitive->{"thresholdIt"}->($total, $warnThresh, $critThresh, $caption, $Primitive);
+};
 $Functions{table_average} = sub {
     my ($parameters, $variables, $response, $debug, $Primitive)=@_;
 

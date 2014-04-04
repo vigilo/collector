@@ -69,6 +69,28 @@ $Functions{m_table_add} = sub {
     }
     return ('OK', $total);
 };
+$Functions{m_average} = sub {
+    my ($parameters, $variables, $response, $debug, $Primitive)=@_;
+
+    my $OID = (split('/',$variables->[0]))[1];
+
+    # Get the index
+    my @indexes = $Primitive->{"lookupMultipleIndex"}->($response,$OID);
+    return ("UNKNOWN","U") if ($#indexes == -1);
+    my $total = 0;
+    my $nb_value = 0;
+    my $value;
+    foreach my $index (@indexes){
+        return ("UNKNOWN","U") unless exists($response->{"$OID.$index"});
+        $value = $response->{"$OID.$index"};
+        return ("UNKNOWN","U") unless $Primitive->{"checkOIDVal"}->($value);
+        $total += $value;
+        $nb_value += 1;
+    }
+    return ("UNKNOWN","U") if ($nb_value == 0);
+    $total = $total / $nb_value;
+    return ('OK', $total);
+};
 $Functions{m_table_average} = sub {
     my ($parameters, $variables, $response, $debug, $Primitive)=@_;
 

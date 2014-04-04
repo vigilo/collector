@@ -113,6 +113,20 @@ our %Primitive = (
     }
     return -1;
 },
+"lookupMultipleIndex" => sub {
+    # looks for an OID subtree which is supposed to be one-level deep and
+    # returns the list of indexes
+    my ($response,$where)=@_;
+    my @indexes;
+    foreach my $OID (keys %{$response})
+    {
+        if ($OID =~ /^$where\.(\d+)/)
+        {
+            push @indexes,$1;
+        }
+    }
+    return @indexes;
+},
 "lookupMultiple" => sub {
     # looks for a given pattern in an OID subtree
     # which is supposed to be one-level deep
