@@ -617,6 +617,12 @@ sub verifySNMPIdent
         print ("$state: No support for SNMP v".$host::Host{'snmp'}->{'version'}." yet\n");
         exit $ERRORS{$state};
     }
+
+    # Cas des adresses IPv6.
+    if ( $host::Host{'IPAddress'} =~ /:/ ) {
+        $param{'domain'} = 'udp6';
+    }
+
     ($session, $error) = Net::SNMP->session(%param);
     if (!defined($session)) {
         $state='UNKNOWN';
