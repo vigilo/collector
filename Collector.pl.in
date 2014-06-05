@@ -242,10 +242,6 @@ srand();
 ## Load the main configuration file
 do $conf;
 
-if ((!defined $timeout) || ($timeout == 0)) {
-    $timeout = $TIMEOUT;
-}
-
 if (!defined $tmppath) {
     $tmppath = "/tmp";
 }
@@ -289,6 +285,12 @@ if (-d "$lib/ext") {
 eval {require "$path/$opt_H.pm";} ||
     die "'$path/$opt_H.pm' isn't present\n";
 #print Dumper(\%host::Host);
+
+if ((defined $host::Host{'timeout'}) && ($host::Host{'timeout'} > 0)){
+    $timeout = $host::Host{'timeout'};
+}else{
+    $timeout = $TIMEOUT;
+}
 
 # Just in case of problems, let's not hang Nagios
 $SIG{'ALRM'} = sub {
