@@ -454,7 +454,7 @@ sub process_arguments()
 
     if (! $opt_H) {
         # FIXME : Verify the hostname structure
-        print "Provides a hostname\n";
+        print "Provide a hostname\n";
         exit $ERRORS{'UNKNOWN'};
     }
 
