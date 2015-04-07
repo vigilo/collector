@@ -149,6 +149,14 @@ $Functions{percentage} = sub {
     return ("UNKNOWN","U") unless $Primitive->{"checkOIDVal"}->($response->{$OID});
     return ('OK',$response->{$OID}/100);
 };
+$Functions{perthousand} = sub {
+    my ($parameters, $variables, $response, $debug, $Primitive)=@_;
+
+    my $OID = (split('/',$variables->[0]))[1];
+    return ("UNKNOWN","U") unless exists($response->{$OID});
+    return ("UNKNOWN","U") unless $Primitive->{"checkOIDVal"}->($response->{$OID});
+    return ('OK',$response->{$OID}/10.0);
+};
 $Functions{percentage2values} = sub {
     my ($parameters, $variables, $response, $debug, $Primitive)=@_;
 
