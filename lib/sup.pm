@@ -328,7 +328,7 @@ $Functions{storage} = sub {
     if ($percent)
     {
         my $usagePercentage = $usedBytes*100.0/$maxBytes;
-        return $Primitive->{"thresholdIt"}->($usagePercentage,$warnThresh,$critThresh,"Usage: ".sprintf("%.2f",$usedBytes/1024/1024)." MB (%2.2f%%)", $Primitive);
+        return $Primitive->{"thresholdIt"}->($usagePercentage,$warnThresh,$critThresh,"Usage: ".sprintf("%.2f/%.2f",$usedBytes/1024/1024, $maxBytes/1024/1024)." MB (%2.2f%%)", $Primitive);
     }
     else
     {
