@@ -56,7 +56,6 @@ License
 -------
 Collector est sous licence `GPL v2`_.
 
-
 .. _documentation officielle: Vigilo_
 .. _Vigilo: http://www.projet-vigilo.org
 .. _Nagios: http://nagios.org
