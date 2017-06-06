@@ -41,6 +41,7 @@ rm -rf $RPM_BUILD_ROOT
 make install_pkg \
     DESTDIR=$RPM_BUILD_ROOT \
     LIBDIR=%{_libdir} \
+    BINDIR=%{_bindir} \
     SYSCONFDIR=%{_sysconfdir} \
     LOCALSTATEDIR=%{_localstatedir}
 
@@ -57,7 +58,7 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_sysconfdir}/vigilo
 %config(noreplace) %{_sysconfdir}/vigilo/%{module}
 %config(noreplace) %{_sysconfdir}/cron.d/*.cron
-%{_sysconfdir}/nagios/plugins.d
+%dir %{_sysconfdir}/nagios/plugins.d
 %config(noreplace) %{_sysconfdir}/nagios/plugins.d/%{name}.cfg
 
 

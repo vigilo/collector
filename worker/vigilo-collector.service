@@ -1,0 +1,16 @@
+[Unit]
+Description=A worker for Nagios 4 that handles Vigilo's SNMP Collector
+After=syslog.service
+After=rsyslog.service
+After=network.target
+After=nagios.service
+Requires=nagios.service
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=simple
+User=nagios
+ExecStart=/usr/bin/vigilo-collector --nagios /var/spool/nagios/cmd/nagios.qh
+Restart=on-failure

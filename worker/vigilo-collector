@@ -1,0 +1,191 @@
+#!/usr/bin/perl -w
+# vim: set fileencoding=utf-8 sw=4 ts=4 et :
+
+use strict;
+use warnings;
+use IO::Socket::UNIX;
+use Time::HiRes qw( gettimeofday );
+use IO::Capture::Stdout;
+use IO::Capture::Stderr;
+use Text::ParseWords;
+use Getopt::Long;
+use Sys::CPU;
+use 5.008; # Correspond à la version de perl présente dans RHEL 5
+
+my $jobs_count;
+my $line;
+my $pid;
+my $socket;
+my $nagios_qh = "/var/spool/nagios/cmd/nagios.qh";
+my $max_jobs = 10000;
+my $delay = 3;
+my $testing = defined($ENV{'VIGILO_TEST'});
+my $gettimeofday;
+my $cpus = $testing ? 1 : Sys::CPU::cpu_count();
+my $help = 0;
+
+
+GetOptions('help|?' => \$help, 'nagios=s' => \$nagios_qh, 'cpus=i' => \$cpus);
+
+if ($help) {
+    print "Usage: $0 [--help|-?] [--cpus=CPUs] [--nagios /path/to/nagios.qh]\n\n";
+    print "Default path for the Nagios query handler: $nagios_qh\n";
+    exit(2);
+}
+
+sub runWorker {
+    # Lors des tests, on veut obtenir des valeurs fixes
+    # pour pouvoir facilement valider les résultats.
+    $pid = $$;
+    if ($testing) {
+        $gettimeofday = sub { return (0, 0); };
+    } else {
+        $gettimeofday = \&gettimeofday;
+    }
+
+    RECONNECT:
+    while (1) {
+        $socket = IO::Socket::UNIX->new(
+            Type => SOCK_STREAM,
+            Peer => $nagios_qh,
+        );
+
+        if (!$socket) {
+            print "[$pid] Could not connect to Nagios query handler ($nagios_qh)\n";
+            print "[$pid] Retrying in $delay second(s)...\n";
+            sleep($delay);
+            next;
+        }
+        print "[$pid] Successfully connected to '$nagios_qh'\n";
+
+        $socket->autoflush(1);
+        while (1) {
+            # cf. https://assets.nagios.com/downloads/nagioscore/docs/Writing_a_Custom_Worker.pdf
+            print "[$pid] Registering worker for plugin 'Collector'\n";
+            print $socket "\@wproc register name=vigilo-collector-$pid;pid=$pid;max_jobs=$max_jobs;plugin=Collector\0";
+            {
+                local $/ = "\0";
+                $line = $socket->getline();
+                if (!defined($line)) {
+                    print "[$pid] Lost connection to Nagios query handler. Reconnecting...\n";
+                    next RECONNECT;
+                }
+                die("[$pid] Could not register worker") unless ($line eq "OK\0");
+            }
+
+            print "[$pid] Ready to process jobs\n";
+            for ($jobs_count = 1; $jobs_count <= $max_jobs; $jobs_count++) {
+                my %job;
+                my $result;
+                my $sec;
+                my $usec;
+                my $stdout;
+                my $stderr;
+
+                {
+                    local $/ = "\1\0\0\0";
+                    $line = $socket->getline();
+                }
+
+                if (!defined($line)) {
+                    print "[$pid] Lost connection to Nagios query handler. Reconnecting...\n";
+                    next RECONNECT;
+                }
+
+                %job = $line =~ /([^=]+)=([^\0]*)\0/gx;
+                print "[$pid] Processing job #$jobs_count/$max_jobs (ID: $job{'job_id'}): $job{'command'}\n";
+
+                # Modifie @ARGV et $0 en fonction de la commande reçue en entrée.
+                # Nécessaire car le Collector s'appuie dessus pour identifier
+                # la machine à interroger.
+                @ARGV = shellwords($job{'command'});
+                $0 = shift @ARGV;
+
+                delete $job{'command'};
+                delete $job{'timeout'};
+
+                ($sec, $usec) = $gettimeofday->();
+                $job{'start'}       = sprintf("%d.%06d", $sec, $usec);
+                $job{'exited_ok'}   = 1;
+                $job{'wait_status'} = 0;
+                $job{'outstd'}      = '';
+                $job{'outerr'}      = '';
+
+                {
+                    no warnings 'once';
+
+                    # Interception des appels à exit() et die().
+                    local *CORE::GLOBAL::exit = sub {
+                        $job{'wait_status'} = (shift) * 2 ** 8;
+                    };
+                    local *CORE::GLOBAL::die = sub {
+                        $job{'outerr'} = (shift);
+                        $job{'wait_status'} = 3 * 2 ** 8;
+                    };
+
+                    # Capture STDOUT et STDERR.
+                    $stdout = IO::Capture::Stdout->new();
+                    $stderr = IO::Capture::Stderr->new();
+                    $stdout->start();
+                    $stderr->start();
+
+                    eval {
+                        # Exécute le code du collecteur pour traiter la demande.
+                        do($0);
+                    };
+
+                    # Désactive le timer éventuellement restant.
+                    alarm(0);
+
+                    # Restaure les écritures sur STDOUT/STDERR.
+                    $stdout->stop();
+                    $stderr->stop();
+
+                    # Récupère la sortie du collecteur.
+                    $job{'outstd'} .= join(' ', $stdout->read());
+                    $job{'outerr'} .= join(' ', $stderr->read());
+
+                    # Remplacement des retours à la ligne dans les sorties
+                    # par des espaces et suppression d'un éventuel espace final.
+                    $job{'outstd'} =~ tr/\n/ /;
+                    $job{'outstd'} =~ s/ $//;
+                    $job{'outerr'} =~ tr/\n/ /;
+                    $job{'outerr'} =~ s/ $//;
+                };
+
+                ($sec, $usec) = $gettimeofday->();
+                $job{'stop'}        = sprintf("%d.%06d", $sec, $usec);
+                $job{'runtime'}     = sprintf("%.6f", $job{'stop'} - $job{'start'});
+
+                $result = join("\0", map{qq{$_=$job{$_}}} keys %job) . "\0\1\0\0\0";
+                print "[$pid] Processed job #$jobs_count/$max_jobs (ID: $job{'job_id'}): $job{'start'} - $job{'stop'} ($job{'runtime'}s)\n";
+                print $socket $result;
+
+                # Lors des tests, on n'exécute qu'un seul job avant de quitter.
+                if ($testing) {
+                    exit(0);
+                }
+            }
+        }
+    }
+}
+
+print "[$$] Manager is starting\n";
+for (1 .. $cpus) {
+    $pid = fork;
+    if (not defined $pid) {
+        warn "[$$] Could not fork";
+        next
+    }
+    if (not $pid) {
+        runWorker;
+    } else {
+        print "[$$] Forked worker with PID $pid\n";
+    }
+}
+
+for (1 .. $cpus) {
+    $pid = wait();
+    print "[$pid] Worker exited\n";
+}
+print "[$$] Manager is exiting\n";
