@@ -1,0 +1,1 @@
+collector.rhel6.spec
