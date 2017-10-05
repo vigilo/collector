@@ -10,7 +10,7 @@ pdf_documents = [
 ]
 
 latex_documents = [
-    ('dev', 'dev-%s.tex' % name, u"%s : Manuel utilisateur" % project,
+    ('dev', 'dev-%s.tex' % name, u"%s : Manuel développeur" % project,
      'AA100004-2/DEV00003', 'vigilo'),
 ]
 
