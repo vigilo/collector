@@ -38,6 +38,8 @@ install_pkg: $(INFILES)
 	mkdir -p $(DESTDIR)$(CLIBDIR)/ext
 	install -m 755 -p pkg/cleanup.sh $(DESTDIR)$(CLIBDIR)/
 	install -m 644 -p pkg/cronjobs $(DESTDIR)$(SYSCONFDIR)/cron.d/$(PKGNAME)$(CRONEXT)
+	mkdir -p $(DESTDIR)$(MANDIR)/man1/
+	install -m 644 -p Collector.1 $(DESTDIR)$(MANDIR)/man1/
 
 install_pkg_systemd: install_pkg
 	mkdir -p $(DESTDIR)$(SYSTEMDDIR) $(DESTDIR)$(BINDIR)/

@@ -49,7 +49,8 @@ make install_pkg_systemd \
     BINDIR=%{_bindir} \
     SYSCONFDIR=%{_sysconfdir} \
     SYSTEMDDIR=%{_unitdir} \
-    LOCALSTATEDIR=%{_localstatedir}
+    LOCALSTATEDIR=%{_localstatedir} \
+    MANDIR=%{_mandir}
 
 
 %post
@@ -78,6 +79,7 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_sysconfdir}/nagios/plugins.d
 %config(noreplace) %{_sysconfdir}/nagios/plugins.d/%{name}.cfg
 %attr(644,root,root) %{_unitdir}/%{name}.service
+%{_mandir}/man1/Collector.1*
 
 
 %changelog

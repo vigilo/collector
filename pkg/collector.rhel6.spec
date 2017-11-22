@@ -43,7 +43,8 @@ make install_pkg \
     LIBDIR=%{_libdir} \
     BINDIR=%{_bindir} \
     SYSCONFDIR=%{_sysconfdir} \
-    LOCALSTATEDIR=%{_localstatedir}
+    LOCALSTATEDIR=%{_localstatedir} \
+    MANDIR=%{_mandir}
 
 
 %clean
@@ -60,6 +61,7 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/cron.d/*.cron
 %dir %{_sysconfdir}/nagios/plugins.d
 %config(noreplace) %{_sysconfdir}/nagios/plugins.d/%{name}.cfg
+%{_mandir}/man1/Collector.1*
 
 
 %changelog
