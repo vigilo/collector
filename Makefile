@@ -1,7 +1,8 @@
 NAME = collector
 
 INFILES = Collector general.conf vigilo-collector.cfg \
-          pkg/cleanup.sh pkg/cronjobs Collector.1
+          pkg/cleanup.sh pkg/cronjobs Collector.1 \
+          worker/vigilo-collector
 
 all: $(INFILES)
 
@@ -20,6 +21,9 @@ pkg/cleanup.sh: pkg/cleanup.sh.in
 	sed -e 's,@CONFDIR@,$(CONFDIR),g' $^ > $@
 pkg/cronjobs: pkg/cronjobs.in
 	sed -e 's,@CLIBDIR@,$(CLIBDIR),g' $^ > $@
+worker/vigilo-collector: worker/vigilo-collector.in
+	sed -e 's,@CONFDIR@,$(CONFDIR),g' $^ > $@
+	chmod a+x $@
 
 man: Collector.1
 Collector.1: Collector
@@ -51,7 +55,7 @@ install_permissions:
 	find $(DESTDIR)$(CLIBDIR) -type d -exec chmod a+rx {} \;
 	find $(DESTDIR)$(CLIBDIR) -type f -exec chmod a+r  {} \;
 
-tests: bin/python
+tests: bin/python worker/vigilo-collector
 	VIGILO_DEBUG=1 bin/python worker/tests/test.py
 
 clean: clean_common
