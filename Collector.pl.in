@@ -194,7 +194,7 @@ package collector;
 use POSIX;
 use strict;
 use lib "@NAGIOS_PLUGINS_DIR@";
-use utils qw($TIMEOUT %ERRORS &print_revision &support);
+use Nagios::Plugin qw(%ERRORS);
 
 use Net::SNMP;
 use Getopt::Long;
@@ -289,7 +289,7 @@ eval {require "$path/$opt_H.pm";} ||
 if ((defined $host::Host{'timeout'}) && ($host::Host{'timeout'} > 0)){
     $timeout = $host::Host{'timeout'};
 }else{
-    $timeout = $TIMEOUT;
+    $timeout = 15;
 }
 
 # Just in case of problems, let's not hang Nagios
@@ -389,7 +389,6 @@ sub print_help()
     printf "   -C (--conf)       Config file (defaults to @CONFDIR@/general.conf)\n";
     printf "   -h (--help)       usage help \n\n";
     printf "   -d (--debug)      debug \n\n";
-    print_revision($PROGNAME, '$Revision$');
 }
 
 
