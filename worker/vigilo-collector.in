@@ -42,16 +42,21 @@ my $max_jobs = 10000;
 my $delay = 3;
 my $testing = defined($ENV{'VIGILO_TEST'});
 my $gettimeofday;
-my $cpus = $testing ? 1 : Sys::CPU::cpu_count();
+my $cpus = $testing ? 1 : 0;
 my $help = 0;
+my $debug = 0;
 
 
-GetOptions('help|?' => \$help, 'nagios=s' => \$nagios_qh, 'cpus=i' => \$cpus);
+GetOptions('help|?' => \$help, 'nagios=s' => \$nagios_qh, 'cpus=i' => \$cpus, 'debug' => \$debug);
 
 if ($help) {
-    print "Usage: $0 [--help|-?] [--cpus=CPUs] [--nagios /path/to/nagios.qh]\n\n";
+    print "Usage: $0 [--help|-?] [--debug] [--cpus=CPUs] [--nagios /path/to/nagios.qh]\n\n";
     print "Default path for the Nagios query handler: $nagios_qh\n";
     exit(2);
+}
+
+if ($cpus <= 0) {
+    $cpus = Sys::CPU::cpu_count();
 }
 
 sub runWorker {
@@ -114,7 +119,7 @@ sub runWorker {
                 }
 
                 %job = $line =~ /([^=]+)=([^\0]*)\0/gx;
-                print "[$pid] Processing job #$jobs_count/$max_jobs (ID: $job{'job_id'}): $job{'command'}\n";
+                print "[$pid] Processing job #$jobs_count/$max_jobs (ID: $job{'job_id'}): $job{'command'}\n" if $debug;
 
                 # Modifie @ARGV et $0 en fonction de la commande reçue en entrée.
                 # Nécessaire car le Collector s'appuie dessus pour identifier
@@ -179,7 +184,7 @@ sub runWorker {
                 $job{'runtime'}     = sprintf("%.6f", $job{'stop'} - $job{'start'});
 
                 $result = join("\0", map{qq{$_=$job{$_}}} keys %job) . "\0\1\0\0\0";
-                print "[$pid] Processed job #$jobs_count/$max_jobs (ID: $job{'job_id'}): $job{'start'} - $job{'stop'} ($job{'runtime'}s)\n";
+                print "[$pid] Processed job #$jobs_count/$max_jobs (ID: $job{'job_id'}): $job{'start'} - $job{'stop'} ($job{'runtime'}s)\n" if $debug;
                 print $socket $result;
 
                 # Lors des tests, on n'exécute qu'un seul job avant de quitter.

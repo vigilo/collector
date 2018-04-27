@@ -4,13 +4,14 @@ After=syslog.service
 After=rsyslog.service
 After=network.target
 After=nagios.service
-Requires=nagios.service
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=multi-user.target nagios.service
 
 [Service]
+Environment=CPUS=0
+EnvironmentFile=-/etc/sysconfig/vigilo-collector
 Type=simple
 User=nagios
-ExecStart=/usr/bin/vigilo-collector --nagios /var/spool/nagios/cmd/nagios.qh
+ExecStart=/usr/bin/vigilo-collector --nagios /var/spool/nagios/cmd/nagios.qh --cpus "${CPUS}"
 Restart=on-failure
