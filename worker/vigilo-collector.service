@@ -13,5 +13,5 @@ Environment=CPUS=0
 EnvironmentFile=-/etc/sysconfig/vigilo-collector
 Type=simple
 User=nagios
-ExecStart=/usr/bin/vigilo-collector --nagios /var/spool/nagios/cmd/nagios.qh --cpus "${CPUS}"
+ExecStart=/usr/bin/vigilo-collector --nagios /dev/shm/nagios/nagios.qh --cpus "${CPUS}"
 Restart=on-failure
