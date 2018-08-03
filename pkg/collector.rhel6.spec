@@ -5,7 +5,7 @@ Summary:    Centralized collector plugin for Nagios
 Version:    @VERSION@
 Release:    @RELEASE@%{?dist}
 Source0:    %{name}-%{version}.tar.gz
-URL:        http://www.vigilo-nms.com
+URL:        https://www.vigilo-nms.com
 Group:      Applications/System
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-build
 License:    GPLv2
@@ -24,7 +24,7 @@ Requires:   nagios
 %description
 This plugin collects the SNMP data once and forwards it to an UDP port. Its
 configuration needs to be generated.
-This application is part of the Vigilo Project <http://vigilo-nms.com>
+This application is part of the Vigilo Project <https://www.vigilo-nms.com>
 
 %prep
 %setup -q
