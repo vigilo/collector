@@ -10,8 +10,9 @@ WantedBy=multi-user.target nagios.service
 
 [Service]
 Environment=CPUS=0
+Environment=OPTIONS=
 EnvironmentFile=-/etc/sysconfig/vigilo-collector
 Type=simple
 User=nagios
-ExecStart=/usr/bin/vigilo-collector --nagios /dev/shm/nagios/cmd/nagios.qh --cpus "${CPUS}"
+ExecStart=/usr/bin/vigilo-collector --nagios /dev/shm/nagios/cmd/nagios.qh --cpus "${CPUS}" ${OPTIONS}
 Restart=on-failure
