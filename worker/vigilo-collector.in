@@ -21,6 +21,7 @@
 ## Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ################################################################################
 
+package collector;
 
 use strict;
 use warnings;
@@ -28,35 +29,45 @@ use IO::Socket::UNIX;
 use Time::HiRes qw( gettimeofday );
 use IO::Capture::Stdout;
 use IO::Capture::Stderr;
-use Text::ParseWords;
-use Getopt::Long;
+use Getopt::Long qw( GetOptions GetOptionsFromArray );
+&Getopt::Long::config('bundling');
 use Sys::CPU;
-use 5.008; # Correspond à la version de perl présente dans RHEL 5
+use Text::ParseWords qw( shellwords );
+use Nagios::Plugin qw(%ERRORS);
 
+my $confdir = "@CONFDIR@";
 my $jobs_count;
 my $line;
 my $pid;
 my $socket;
-my $nagios_qh = "/var/spool/nagios/cmd/nagios.qh";
 my $max_jobs = 10000;
 my $delay = 3;
-my $testing = defined($ENV{'VIGILO_TEST'});
 my $gettimeofday;
-my $cpus = $testing ? 1 : 0;
-my $help = 0;
-my $debug = 0;
+my $testing = defined($ENV{'VIGILO_TEST'});
+my ($help, $nagios_qh, $cpus, $debug, $conf);
+our ($lib, $path, $timeout, $nagios_cmd_file, $connector_socket, $tmppath);
+my %job;
 
+$nagios_qh = "/var/spool/nagios/cmd/nagios.qh";
+$cpus = $testing ? 1 : 0;
+$help = 0;
+$debug = 0;
 
-GetOptions('help|?' => \$help, 'nagios=s' => \$nagios_qh, 'cpus=i' => \$cpus, 'debug' => \$debug);
+##################
 
-if ($help) {
-    print "Usage: $0 [--help|-?] [--debug] [--cpus=CPUs] [--nagios /path/to/nagios.qh]\n\n";
-    print "Default path for the Nagios query handler: $nagios_qh\n";
+sub print_help()
+{
+    my $cpus = Sys::CPU::cpu_count();
+
+    printf "\nUsage: $0 [options]\n";
+    printf "   -C (--conf)      Path to the Collector's configuration file\n";
+    printf "                    (defaults to $confdir/general.conf)\n";
+    printf "   -h (--help)      Print this help\n";
+    printf "   -d (--debug)     Print debugging messages\n";
+    printf "   --cpus=N         Number of worker processes to start (default: $cpus)\n";
+    printf "   --nagios         Path to Nagios' query handler \n";
+    printf "                    (defaults to $nagios_qh)\n";
     exit(2);
-}
-
-if ($cpus <= 0) {
-    $cpus = Sys::CPU::cpu_count();
 }
 
 sub runWorker {
@@ -101,12 +112,15 @@ sub runWorker {
 
             print "[$pid] Ready to process jobs\n";
             for ($jobs_count = 1; $jobs_count <= $max_jobs; $jobs_count++) {
-                my %job;
+                my @args;
                 my $result;
                 my $sec;
                 my $usec;
                 my $stdout;
                 my $stderr;
+                my $dummy;
+                my $cmd_hostname;
+                my ($cmd_state, $cmd_answer);
 
                 {
                     local $/ = "\1\0\0\0";
@@ -121,11 +135,19 @@ sub runWorker {
                 %job = $line =~ /([^=]+)=([^\0]*)\0/gx;
                 print "[$pid] Processing job #$jobs_count/$max_jobs (ID: $job{'job_id'}): $job{'command'}\n" if $debug;
 
-                # Modifie @ARGV et $0 en fonction de la commande reçue en entrée.
-                # Nécessaire car le Collector s'appuie dessus pour identifier
-                # la machine à interroger.
-                @ARGV = shellwords($job{'command'});
-                $0 = shift @ARGV;
+                # Analyse du contenu de la commande en supprimant
+                # le nom du plugin lui-même (/.../nagios/plugins/Collector).
+                @args = shellwords($job{'command'});
+                shift @args;
+
+                GetOptionsFromArray(
+                    \@args,
+                    "V"   => \$dummy,           "version"    => \$dummy,
+                    "h"   => \$dummy,           "help"       => \$dummy,
+                    "d"   => \$dummy,           "debug"      => \$dummy,
+                    "H=s" => \$cmd_hostname,    "hostname=s" => \$cmd_hostname,
+                    "C=s" => \$dummy,           "conf=s"     => \$dummy,
+                );
 
                 delete $job{'command'};
                 delete $job{'timeout'};
@@ -141,13 +163,21 @@ sub runWorker {
                     no warnings 'once';
 
                     # Interception des appels à exit() et die().
-                    local *CORE::GLOBAL::exit = sub {
-                        $job{'wait_status'} = (shift) * 2 ** 8;
-                    };
-                    local *CORE::GLOBAL::die = sub {
-                        $job{'outerr'} = (shift);
-                        $job{'wait_status'} = 3 * 2 ** 8;
-                    };
+                    BEGIN {
+                        *CORE::GLOBAL::exit = sub {
+                            my $status = shift;
+                            print "Collector exited with status $status\n" if $debug;
+                            $job{'wait_status'} = $status * 2 ** 8;
+                        };
+                        *CORE::GLOBAL::die = sub {
+                            my $err = shift;
+                            print "Collector exited with error: $err\n" if $debug;
+                            $job{'outerr'} = $err;
+                            $job{'wait_status'} = 3 * 2 ** 8;
+                        };
+                    }
+
+                    print "[$pid] Starting data collection on '$cmd_hostname'\n";
 
                     # Capture STDOUT et STDERR.
                     $stdout = IO::Capture::Stdout->new();
@@ -155,10 +185,10 @@ sub runWorker {
                     $stdout->start();
                     $stderr->start();
 
-                    eval {
-                        # Exécute le code du collecteur pour traiter la demande.
-                        do($0);
-                    };
+                    # Exécute la collecte sur l'hôte.
+                    ($cmd_state, $cmd_answer) = collect_host($cmd_hostname);
+                    $job{'outstd'} = $cmd_answer;
+                    $job{'wait_status'} = ${ERRORS{$cmd_state}} * 2 ** 8;
 
                     # Désactive le timer éventuellement restant.
                     alarm(0);
@@ -177,6 +207,9 @@ sub runWorker {
                     $job{'outstd'} =~ s/ $//;
                     $job{'outerr'} =~ tr/\n/ /;
                     $job{'outerr'} =~ s/ $//;
+
+                    print "[$pid] STDOUT: $job{'outstd'}\n" if $debug;
+                    print "[$pid] STDERR: $job{'outerr'}\n" if $debug;
                 };
 
                 ($sec, $usec) = $gettimeofday->();
@@ -184,7 +217,7 @@ sub runWorker {
                 $job{'runtime'}     = sprintf("%.6f", $job{'stop'} - $job{'start'});
 
                 $result = join("\0", map{qq{$_=$job{$_}}} keys %job) . "\0\1\0\0\0";
-                print "[$pid] Processed job #$jobs_count/$max_jobs (ID: $job{'job_id'}): $job{'start'} - $job{'stop'} ($job{'runtime'}s)\n" if $debug;
+                print "[$pid] Processed job #$jobs_count/$max_jobs (ID: $job{'job_id'}): $job{'start'} - $job{'stop'} ($job{'runtime'}s) [result: $job{'wait_status'}]\n" if $debug;
                 print $socket $result;
 
                 # Lors des tests, on n'exécute qu'un seul job avant de quitter.
@@ -195,6 +228,44 @@ sub runWorker {
         }
     }
 }
+
+##################
+
+GetOptions(
+    'help|?'        => \$help,
+    'nagios=s'      => \$nagios_qh,
+    'cpus=i'        => \$cpus,
+    'debug|d'       => \$debug,
+    'conf=s'        => \$conf,
+    'C=s'           => \$conf,
+);
+
+if ($help) {
+    print_help();
+}
+
+if ($cpus <= 0) {
+    $cpus = Sys::CPU::cpu_count();
+}
+
+unless (defined $conf) {
+    $conf = "$confdir/general.conf";
+}
+
+## Load the main configuration file
+do $conf;
+
+if (! $lib) {
+    print "Provide a pathname for the library directory\n";
+    exit(2);
+} elsif (! -x $lib) {
+    print "Provide an existing library path: $lib\n";
+    exit(2);
+}
+
+require "$lib/collector.pm";
+check_conf();
+load_libs($debug);
 
 print "[$$] Manager is starting\n";
 for (1 .. $cpus) {

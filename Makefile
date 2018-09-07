@@ -11,7 +11,7 @@ include buildenv/Makefile.common.nopython
 CLIBDIR = $(LIBDIR)/$(PKGNAME)
 
 Collector: Collector.pl.in
-	sed -e 's,@NAGIOS_PLUGINS_DIR@,$(NPLUGDIR),g;s,@CONFDIR@,$(CONFDIR),g' $^ > $@
+	sed -e 's,@CONFDIR@,$(CONFDIR),g' $^ > $@
 general.conf: general.conf.in
 	sed -e 's,@LIBDIR@,$(LIBDIR),g;s,@SYSCONFDIR@,$(SYSCONFDIR),g;s,@LOCALSTATEDIR@,$(LOCALSTATEDIR),g;s,@CMDPIPE@,$(NAGIOSCMDPIPE),g' \
 		$^ > $@
@@ -55,13 +55,10 @@ install_permissions:
 	find $(DESTDIR)$(CLIBDIR) -type d -exec chmod a+rx {} \;
 	find $(DESTDIR)$(CLIBDIR) -type f -exec chmod a+r  {} \;
 
-tests: bin/python worker/vigilo-collector
-	VIGILO_DEBUG=1 bin/python worker/tests/test.py
-
 clean: clean_common
 	rm -f $(INFILES)
 
 doc: sphinxdoc
 
-.PHONY: all clean man doc tests \
+.PHONY: all clean man doc \
 	install install_pkg install_pkg_systemd install_permissions
