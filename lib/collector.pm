@@ -444,7 +444,6 @@ sub getOIDValues
 
             if (!defined($responseGetOIDsTMP = $session->get_request(%args))) {
                     $answer=$session->error;
-                    $session->close;
                     $state = "WARNING";
                     $answer = "WARNING2: SNMP error: $answer";
                     return ($state, $answer);
@@ -903,12 +902,14 @@ sub collect_host($)
 
     ($state, $answer) = &getOIDValues;
     if ($state ne "OK") {
+        $session->close();
         return ($state, $answer);
     }
 
     print Dumper($response) if ($debug);
 
     ($state, $answer) = &send2Sup;
+    $session->close();
     if ($state ne "OK") {
         return ($state, $answer);
     }
