@@ -221,8 +221,8 @@ $Functions{table_mult_factor} = sub {
 $Functions{sysUpTime} = sub {
     my ($parameters, $variables, $response, $debug, $Primitive)=@_;
 
-    my $criticalTime = $parameters->[0] || 400;
-    my $warnTime     = $parameters->[1] || 900;
+    my $criticalTime = $parameters->[0];
+    my $warnTime     = $parameters->[1];
     my $sysUpTimeOID = (split('/',$variables->[0]))[1];
     my $timestamp    = 0;
 
@@ -232,7 +232,7 @@ $Functions{sysUpTime} = sub {
     return ("UNKNOWN","UNKNOWN: OID $sysUpTimeOID not found") unless $Primitive->{"checkOIDVal"}->($sysUpTime);
     if ($timestamp = $Primitive->{"date2Time"}->($sysUpTime))
     {
-        return $Primitive->{"thresholdIt"}->($timestamp,"\@$warnTime","\@$criticalTime","sysUpTime is $sysUpTime (%d s)",$Primitive);
+        return $Primitive->{"thresholdIt"}->($timestamp,$warnTime,$criticalTime,"sysUpTime is $sysUpTime (%d s)",$Primitive);
     }
     return ('UNKNOWN', "UNKNOWN: unable to understand sysUpTime $sysUpTime");
 };
@@ -335,7 +335,7 @@ $Functions{storage} = sub {
         my $freeBytes = $maxBytes - $usedBytes;
         my $freePercentage = $freeBytes*100.0/$maxBytes;
         $freePercentage = sprintf("%2.2f%%%%",$freePercentage);
-        return $Primitive->{"thresholdIt"}->($freeBytes,"@".($warnThresh*1024*1024),"@".($critThresh*1024*1024),"Usage: %d Bytes free ($freePercentage)", $Primitive);
+        return $Primitive->{"thresholdIt"}->($freeBytes,$warnThresh,$critThresh,"Usage: %d Bytes free ($freePercentage)", $Primitive);
     }
 };
 $Functions{average} = sub {
