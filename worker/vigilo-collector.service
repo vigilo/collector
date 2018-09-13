@@ -3,7 +3,8 @@ Description=A worker for Nagios 4 that handles Vigilo's SNMP Collector
 After=syslog.service
 After=rsyslog.service
 After=network.target
-After=nagios.service
+Before=nagios.service
+BindsTo=nagios.service
 
 [Install]
 WantedBy=multi-user.target nagios.service
