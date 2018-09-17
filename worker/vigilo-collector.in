@@ -103,11 +103,18 @@ sub runWorker {
             {
                 local $/ = "\0";
                 $line = $socket->getline();
+
                 if (!defined($line)) {
-                    print "[$pid] Lost connection to Nagios query handler. Reconnecting...\n";
+                    print "[$pid] Lost connection to Nagios query handler during registration. Reconnecting...\n";
+                    sleep($delay);
                     next RECONNECT;
                 }
-                die("[$pid] Could not register worker") unless ($line eq "OK\0");
+
+                if ($line ne "OK\0") {
+                    print "[$pid] Could not register worker. Retrying...\n";
+                    sleep($delay);
+                    next RECONNECT;
+                }
             }
 
             print "[$pid] Ready to process jobs\n";
