@@ -35,6 +35,13 @@ use Sys::CPU;
 use Text::ParseWords qw( shellwords );
 use Nagios::Plugin qw(%ERRORS);
 
+use constant {
+    LEVEL_WARN      => 0,
+    LEVEL_INFO      => 1,
+    LEVEL_NOTICE    => 2,
+    LEVEL_DEBUG     => 3,
+};
+
 my $confdir = "@CONFDIR@";
 my $jobs_count;
 my $line;
@@ -44,14 +51,14 @@ my $max_jobs = 10000;
 my $delay = 3;
 my $gettimeofday;
 my $testing = defined($ENV{'VIGILO_TEST'});
-my ($help, $nagios_qh, $cpus, $debug, $conf);
+my ($help, $nagios_qh, $cpus, $verbose, $conf);
 our ($lib, $path, $timeout, $nagios_cmd_file, $connector_socket, $tmppath);
 my %job;
 
 $nagios_qh = "/var/spool/nagios/cmd/nagios.qh";
 $cpus = $testing ? 1 : 0;
 $help = 0;
-$debug = 0;
+$verbose = LEVEL_WARN;
 
 ##################
 
@@ -59,14 +66,14 @@ sub print_help()
 {
     my $cpus = Sys::CPU::cpu_count();
 
-    printf "\nUsage: $0 [options]\n";
-    printf "   -C (--conf)      Path to the Collector's configuration file\n";
-    printf "                    (defaults to $confdir/general.conf)\n";
-    printf "   -h (--help)      Print this help\n";
-    printf "   -d (--debug)     Print debugging messages\n";
-    printf "   --cpus=N         Number of worker processes to start (default: $cpus)\n";
-    printf "   --nagios         Path to Nagios' query handler \n";
-    printf "                    (defaults to $nagios_qh)\n";
+    print "\nUsage: $0 [options]\n";
+    print "   -C (--conf)       Path to the Collector's configuration file\n";
+    print "                     (defaults to $confdir/general.conf)\n";
+    print "   -h (--help)       Print this help\n";
+    print "   -v (--verbose)    Increase verbosity. Can be repeated up to 3 times.\n";
+    print "   --cpus=N          Number of worker processes to start (default: $cpus)\n";
+    print "   --nagios          Path to Nagios' query handler \n";
+    print "                     (defaults to $nagios_qh)\n";
     exit(2);
 }
 
@@ -88,36 +95,36 @@ sub runWorker {
         );
 
         if (!$socket) {
-            print "[$pid] Could not connect to Nagios query handler ($nagios_qh)\n";
-            print "[$pid] Retrying in $delay second(s)...\n";
+            print "[$pid] Could not connect to Nagios query handler ($nagios_qh)\n" if $verbose >= LEVEL_WARN;
+            print "[$pid] Retrying in $delay second(s)...\n" if $verbose >= LEVEL_WARN;
             sleep($delay);
             next;
         }
-        print "[$pid] Successfully connected to '$nagios_qh'\n";
+        print "[$pid] Successfully connected to '$nagios_qh'\n" if $verbose >= LEVEL_WARN;
 
         $socket->autoflush(1);
         while (1) {
             # cf. https://assets.nagios.com/downloads/nagioscore/docs/Writing_a_Custom_Worker.pdf
-            print "[$pid] Registering worker for plugin 'Collector'\n";
+            print "[$pid] Registering worker for plugin 'Collector'\n" if $verbose >= LEVEL_WARN;
             print $socket "\@wproc register name=vigilo-collector-$pid;pid=$pid;max_jobs=$max_jobs;plugin=Collector\0";
             {
                 local $/ = "\0";
                 $line = $socket->getline();
 
                 if (!defined($line)) {
-                    print "[$pid] Lost connection to Nagios query handler during registration. Reconnecting...\n";
+                    print "[$pid] Lost connection to Nagios query handler during registration. Reconnecting...\n" if $verbose >= LEVEL_WARN;
                     sleep($delay);
                     next RECONNECT;
                 }
 
                 if ($line ne "OK\0") {
-                    print "[$pid] Could not register worker. Retrying...\n";
+                    print "[$pid] Could not register worker. Retrying...\n" if $verbose >= LEVEL_WARN;
                     sleep($delay);
                     next RECONNECT;
                 }
             }
 
-            print "[$pid] Ready to process jobs\n";
+            print "[$pid] Ready to process jobs\n" if $verbose >= LEVEL_WARN;
             for ($jobs_count = 1; $jobs_count <= $max_jobs; $jobs_count++) {
                 my @args;
                 my $result;
@@ -135,12 +142,12 @@ sub runWorker {
                 }
 
                 if (!defined($line)) {
-                    print "[$pid] Lost connection to Nagios query handler. Reconnecting...\n";
+                    print "[$pid] Lost connection to Nagios query handler. Reconnecting...\n" if $verbose >= LEVEL_WARN;
                     next RECONNECT;
                 }
 
                 %job = $line =~ /([^=]+)=([^\0]*)\0/gx;
-                print "[$pid] Processing job #$jobs_count/$max_jobs (ID: $job{'job_id'}): $job{'command'}\n" if $debug;
+                print "[$pid] Processing job #$jobs_count/$max_jobs (ID: $job{'job_id'}): $job{'command'}\n" if $verbose >= LEVEL_INFO;
 
                 # Analyse du contenu de la commande en supprimant
                 # le nom du plugin lui-même (/.../nagios/plugins/Collector).
@@ -173,18 +180,16 @@ sub runWorker {
                     BEGIN {
                         *CORE::GLOBAL::exit = sub {
                             my $status = shift;
-                            print "Collector exited with status $status\n" if $debug;
+                            print "Collector exited with status $status\n" if $verbose >= LEVEL_WARN;
                             $job{'wait_status'} = $status * 2 ** 8;
                         };
                         *CORE::GLOBAL::die = sub {
                             my $err = shift;
-                            print "Collector exited with error: $err\n" if $debug;
+                            print "Collector exited with error: $err\n" if $verbose >= LEVEL_WARN;
                             $job{'outerr'} = $err;
                             $job{'wait_status'} = 3 * 2 ** 8;
                         };
                     }
-
-                    print "[$pid] Starting data collection on '$cmd_hostname'\n";
 
                     # Capture STDOUT et STDERR.
                     $stdout = IO::Capture::Stdout->new();
@@ -215,8 +220,8 @@ sub runWorker {
                     $job{'outerr'} =~ tr/\n/ /;
                     $job{'outerr'} =~ s/ $//;
 
-                    print "[$pid] STDOUT: $job{'outstd'}\n" if $debug;
-                    print "[$pid] STDERR: $job{'outerr'}\n" if $debug;
+                    print "[$pid] STDOUT: $job{'outstd'}\n" if $verbose >= LEVEL_NOTICE;
+                    print "[$pid] STDERR: $job{'outerr'}\n" if $verbose >= LEVEL_NOTICE;
                 };
 
                 ($sec, $usec) = $gettimeofday->();
@@ -224,7 +229,7 @@ sub runWorker {
                 $job{'runtime'}     = sprintf("%.6f", $job{'stop'} - $job{'start'});
 
                 $result = join("\0", map{qq{$_=$job{$_}}} keys %job) . "\0\1\0\0\0";
-                print "[$pid] Processed job #$jobs_count/$max_jobs (ID: $job{'job_id'}): $job{'start'} - $job{'stop'} ($job{'runtime'}s) [result: $job{'wait_status'}]\n" if $debug;
+                print "[$pid] Processed job #$jobs_count/$max_jobs (ID: $job{'job_id'}): $job{'start'} - $job{'stop'} ($job{'runtime'}s) [result: $job{'wait_status'}]\n" if $verbose >= LEVEL_INFO;
                 print $socket $result;
 
                 # Lors des tests, on n'exécute qu'un seul job avant de quitter.
@@ -242,7 +247,8 @@ GetOptions(
     'help|?'        => \$help,
     'nagios=s'      => \$nagios_qh,
     'cpus=i'        => \$cpus,
-    'debug|d'       => \$debug,
+    'verbose+'      => \$verbose,
+    'v+'            => \$verbose,
     'conf=s'        => \$conf,
     'C=s'           => \$conf,
 );
@@ -272,24 +278,24 @@ if (! $lib) {
 
 require "$lib/collector.pm";
 check_conf();
-load_libs($debug);
+load_libs(($verbose >= LEVEL_DEBUG) ? 1 : 0);
 
-print "[$$] Manager is starting\n";
+print "[$$] Manager is starting\n" if $verbose >= LEVEL_WARN;
 for (1 .. $cpus) {
     $pid = fork;
     if (not defined $pid) {
-        warn "[$$] Could not fork";
+        warn "[$$] Could not fork" if $verbose >= LEVEL_WARN;
         next
     }
     if (not $pid) {
         runWorker;
     } else {
-        print "[$$] Forked worker with PID $pid\n";
+        print "[$$] Forked worker with PID $pid\n" if $verbose >= LEVEL_WARN;
     }
 }
 
 for (1 .. $cpus) {
     $pid = wait();
-    print "[$pid] Worker exited\n";
+    print "[$pid] Worker exited\n" if $verbose >= LEVEL_WARN;
 }
-print "[$$] Manager is exiting\n";
+print "[$$] Manager is exiting\n" if $verbose >= LEVEL_WARN;
