@@ -298,6 +298,7 @@ sub verifySNMPIdent
     my %param = ('hostname', $host::Host{'IPAddress'},
                  'port'    , $host::Host{'snmp'}->{'port'},
                  'version' , $host::Host{'snmp'}->{'version'},
+                 'domain',   'udp',
     );
     if ($host::Host{'snmp'}->{'version'} == 3) {
         # Must define a security level even though the default is noAuthNoPriv
@@ -376,9 +377,13 @@ sub verifySNMPIdent
         return ("UNKNOWN", "UNKNOWN: No support for SNMP v".$host::Host{'snmp'}->{'version'}." yet");
     }
 
+    if (defined($host::Host{'snmp'}->{'transport'})) {
+        $param{'domain'} = $host::Host{'snmp'}->{'transport'};
+    }
+
     # Cas des adresses IPv6.
     if ( $host::Host{'IPAddress'} =~ /:/ ) {
-        $param{'domain'} = 'udp6';
+        $param{'domain'} .= '6';
     }
 
     ($session, $error) = Net::SNMP->session(%param);
