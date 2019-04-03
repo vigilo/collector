@@ -243,6 +243,7 @@ $Functions{ifOperStatus} = sub {
     my $interfaceName = $parameters->[1];
     my $adminWarn     = $parameters->[2] || 'w';
     my $dormantWarn   = $parameters->[3] || 'c';
+    my $alarmOnDown   = $parameters->[4] || 'c';
     my $ifDescrOID       = (split('/',$variables->[0]))[1];
     my $ifAdminStatusOID = (split('/',$variables->[1]))[1];
     my $ifOperStatusOID  = (split('/',$variables->[2]))[1];
@@ -261,7 +262,7 @@ $Functions{ifOperStatus} = sub {
     my $ifAlias       = $response->{"$ifAliasOID.$ifIndex"};
     return ("UNKNOWN","UNKNOWN: OID $ifAdminStatusOID.$ifIndex not found") unless $Primitive->{"checkOIDVal"}->($ifAdminStatus);
     return ("UNKNOWN","UNKNOWN: OID $ifOperStatusOID.$ifIndex not found")  unless $Primitive->{"checkOIDVal"}->($ifOperStatus);
-    return $Primitive->{"genericIfOperStatus"}->($interfaceName, $ifAdminStatus, $ifOperStatus, $ifAlias, $ifIndex, $adminWarn, $dormantWarn, $Primitive, $debug);
+    return $Primitive->{"genericIfOperStatus"}->($interfaceName, $ifAdminStatus, $ifOperStatus, $ifAlias, $ifIndex, $adminWarn, $dormantWarn, $alarmOnDown, $Primitive, $debug);
 };
 $Functions{staticIfOperStatus} = sub {
     my ($parameters, $variables, $response, $debug, $Primitive)=@_;
@@ -270,6 +271,7 @@ $Functions{staticIfOperStatus} = sub {
     my $interfaceName = $parameters->[1];
     my $adminWarn     = $parameters->[2] || 'w';
     my $dormantWarn   = $parameters->[3] || 'c';
+    my $alarmOnDown   = $parameters->[4] || 'c';
     my $ifDescrOID       = (split('/',$variables->[0]))[1];
     my $ifAdminStatusOID = (split('/',$variables->[1]))[1];
     my $ifOperStatusOID  = (split('/',$variables->[2]))[1];
@@ -293,7 +295,7 @@ $Functions{staticIfOperStatus} = sub {
     {
         $interfaceName = "$ifDescr $interfaceName";
     }
-    return $Primitive->{"genericIfOperStatus"}->($interfaceName, $ifAdminStatus, $ifOperStatus, $ifAlias, $ifIndex, $adminWarn, $dormantWarn, $Primitive, $debug);
+    return $Primitive->{"genericIfOperStatus"}->($interfaceName, $ifAdminStatus, $ifOperStatus, $ifAlias, $ifIndex, $adminWarn, $dormantWarn, $alarmOnDown, $Primitive, $debug);
 };
 $Functions{storage} = sub {
     my ($parameters, $variables, $response, $debug, $Primitive)=@_;

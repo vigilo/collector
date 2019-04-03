@@ -208,7 +208,7 @@ our %Primitive = (
     return ("CRITICAL","CRITICAL: Failed $caption(s): ".join(',',@msg));
 },
 "genericIfOperStatus"        => sub {
-    my ($interfaceName, $ifAdminStatus, $ifOperStatus, $ifAlias, $ifIndex, $adminWarn, $dormantWarn, $Primitive, $debug)=@_;
+    my ($interfaceName, $ifAdminStatus, $ifOperStatus, $ifAlias, $ifIndex, $adminWarn, $dormantWarn, $alarmOnDown, $Primitive, $debug)=@_;
 
     my ($state, $answer);
     my $alias = '';
@@ -246,8 +246,10 @@ our %Primitive = (
     ## Check operational status
     elsif ( $ifOperStatus == 2 )
     {
-            $state = 'CRITICAL';
-            $answer .= " is down.";
+        $state = 'CRITICAL' if $alarmOnDown == 'c';
+        $state = 'WARNING' if $alarmOnDown == 'w';
+        $state = 'OK' if $alarmOnDown == 'i';
+        $answer .= " is down.";
     }
     elsif ( $ifOperStatus == 5 )
     {
