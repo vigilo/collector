@@ -246,9 +246,9 @@ our %Primitive = (
     ## Check operational status
     elsif ( $ifOperStatus == 2 )
     {
-        $state = 'CRITICAL' if $alarmOnDown == 'c';
-        $state = 'WARNING' if $alarmOnDown == 'w';
-        $state = 'OK' if $alarmOnDown == 'i';
+        $state = 'CRITICAL' if $alarmOnDown eq 'c';
+        $state = 'WARNING' if $alarmOnDown eq 'w';
+        $state = 'OK' if $alarmOnDown eq 'i';
         $answer .= " is down.";
     }
     elsif ( $ifOperStatus == 5 )
