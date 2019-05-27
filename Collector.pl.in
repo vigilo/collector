@@ -686,11 +686,11 @@ sub getOIDValues
             print Dumper(\@snmpOIDs4GetTMP) if ($debug);
 
             if (!defined($responseGetOIDsTMP = $session->get_request(%args))) {
-                    $answer=$session->error;
+                    $answer = $session->error;
                     $session->close;
-                    $state = "WARNING";
-                    $answer = "WARNING2: SNMP error: $answer\n";
-                    return 1;
+                    $state = "CRITICAL";
+                    print "CRITICAL: SNMP error: $answer\n";
+                    exit $ERRORS{$state};
             }
             if ($responseGetOIDs) {
                 %$responseGetOIDs = (%$responseGetOIDs, %$responseGetOIDsTMP) if ($responseGetOIDsTMP);
