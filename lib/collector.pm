@@ -449,9 +449,7 @@ sub getOIDValues
 
             if (!defined($responseGetOIDsTMP = $session->get_request(%args))) {
                     $answer=$session->error;
-                    $state = "WARNING";
-                    $answer = "WARNING2: SNMP error: $answer";
-                    return ($state, $answer);
+                    return ("CRITICAL", "CRITICAL: SNMP error: $answer");
             }
             if ($responseGetOIDs) {
                 %$responseGetOIDs = (%$responseGetOIDs, %$responseGetOIDsTMP) if ($responseGetOIDsTMP);
