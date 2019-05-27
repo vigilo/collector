@@ -443,10 +443,8 @@ sub getOIDValues
             print Dumper(\@snmpOIDs4GetTMP) if ($debug);
 
             if (!defined($responseGetOIDsTMP = $session->get_request(%args))) {
-                    $answer=$session->error;
-                    $state = "WARNING";
-                    $answer = "WARNING2: SNMP error: $answer";
-                    return ($state, $answer);
+                    $answer = $session->error;
+                    return ("CRITICAL", "CRITICAL: SNMP error: $answer");
             }
             if ($responseGetOIDs) {
                 %$responseGetOIDs = (%$responseGetOIDs, %$responseGetOIDsTMP) if ($responseGetOIDsTMP);
