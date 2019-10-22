@@ -13,7 +13,6 @@ BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-build
 License:    GPLv2
 #Buildarch:  noarch  # on installe dans _libdir
 
-BuildRequires:   systemd
 Requires:   perl-Crypt-DES
 Requires:   perl-Net-SNMP
 Requires:   perl-Digest-HMAC
@@ -22,11 +21,6 @@ Requires:   perl-Nagios-Cmd
 Requires:   perl-Math-RPN
 Requires:   perl-Nagios-Plugin
 Requires:   nagios
-
-# Pour _bindir/vigilo-collector
-Requires:   perl-Sys-CPU
-Requires:   perl-IO-Capture
-Requires:   perl-Time-HiRes
 
 %description
 This plugin collects the SNMP data once and forwards it to an UDP port. Its
@@ -44,24 +38,12 @@ make \
 
 %install
 rm -rf $RPM_BUILD_ROOT
-make install_pkg_systemd \
+make install_pkg \
     DESTDIR=$RPM_BUILD_ROOT \
     LIBDIR=%{_libdir} \
-    BINDIR=%{_bindir} \
     SYSCONFDIR=%{_sysconfdir} \
-    SYSTEMDDIR=%{_unitdir} \
     LOCALSTATEDIR=%{_localstatedir} \
     MANDIR=%{_mandir}
-
-
-%post
-%systemd_post %{name}.service
-
-%preun
-%systemd_preun %{name}.service
-
-%postun
-%systemd_postun_with_restart %{name}.service
 
 
 %clean
@@ -70,7 +52,6 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(644,root,root,755)
 %doc COPYING.txt README.txt TODO host.example
-%attr(755,root,root) %{_bindir}/vigilo-collector
 %{_libdir}/%{name}
 %attr(755,root,root) %{_libdir}/%{name}/cleanup.sh
 %attr(755,root,root) %{_libdir}/nagios/plugins/*
@@ -79,7 +60,6 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/cron.d/*.cron
 %dir %{_sysconfdir}/nagios/plugins.d
 %config(noreplace) %{_sysconfdir}/nagios/plugins.d/%{name}.cfg
-%attr(644,root,root) %{_unitdir}/%{name}.service
 %{_mandir}/man1/Collector.1*
 
 

@@ -1,8 +1,7 @@
 NAME = collector
 
 INFILES = Collector general.conf vigilo-collector.cfg \
-          pkg/cleanup.sh pkg/cronjobs Collector.1 \
-          worker/vigilo-collector
+          pkg/cleanup.sh pkg/cronjobs Collector.1
 
 all: $(INFILES)
 
@@ -21,9 +20,6 @@ pkg/cleanup.sh: pkg/cleanup.sh.in
 	sed -e 's,@CONFDIR@,$(CONFDIR),g' $^ > $@
 pkg/cronjobs: pkg/cronjobs.in
 	sed -e 's,@CLIBDIR@,$(CLIBDIR),g' $^ > $@
-worker/vigilo-collector: worker/vigilo-collector.in
-	sed -e 's,@CONFDIR@,$(CONFDIR),g' $^ > $@
-	chmod a+x $@
 
 man: Collector.1
 Collector.1: Collector
@@ -45,11 +41,6 @@ install_pkg: $(INFILES)
 	mkdir -p $(DESTDIR)$(MANDIR)/man1/
 	install -m 644 -p Collector.1 $(DESTDIR)$(MANDIR)/man1/
 
-install_pkg_systemd: install_pkg
-	mkdir -p $(DESTDIR)$(SYSTEMDDIR) $(DESTDIR)$(BINDIR)/
-	install -m 755 -p worker/vigilo-collector $(DESTDIR)$(BINDIR)/
-	install -m 644 -p worker/vigilo-collector.service $(DESTDIR)$(SYSTEMDDIR)/
-
 install_permissions:
 	chown root:root -R $(DESTDIR)$(CLIBDIR)
 	find $(DESTDIR)$(CLIBDIR) -type d -exec chmod a+rx {} \;
@@ -61,4 +52,4 @@ clean: clean_common
 doc: sphinxdoc
 
 .PHONY: all clean man doc \
-	install install_pkg install_pkg_systemd install_permissions
+	install install_pkg install_permissions

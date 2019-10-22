@@ -27,4 +27,3 @@ doc/coverage/
 i18n/*/LC_MESSAGES/*.mo
 i18n/*/LC_MESSAGES/*.js
 src/twisted/plugins/dropin.cache
-worker/vigilo-collector
