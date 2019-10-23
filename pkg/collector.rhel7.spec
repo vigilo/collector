@@ -1,4 +1,6 @@
 %define module  collector
+# Le code est noarch, mais s'installe dans _libdir (arch-dependent)
+%global debug_package %{nil}
 
 Name:       vigilo-%{module}
 Summary:    Centralized collector plugin for Nagios
