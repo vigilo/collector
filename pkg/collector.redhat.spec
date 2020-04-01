@@ -21,6 +21,12 @@ Requires:   nagios
 # Pour _libdir/nagios/utils.pm
 Requires:   nagios-plugins-perl
 
+# Supprime le Requires sur "perl(utils)" ajouté automatiquement.
+# Le module perl en question n'existe pas et la dépendance est
+# déjà couverte par le Requires sur nagios-plugins-perl.
+%filter_from_requires /^perl(utils)/d
+%filter_setup
+
 
 %description
 This plugin collects the SNMP data once and forwards it to an UDP port. Its
