@@ -61,7 +61,7 @@ AC_ARG_VAR(nagiospluginsdir,  [[LIBDIR/nagios/plugins] Nagios plugins directory]
 if test -z "$nagiospluginsdir"; then
    nagiospluginsdir='${libdir}/nagios/plugins'; fi
 
-AC_ARG_VAR(nagioscmdpipe,  [[/var/spool/nagios/cmd/nagios.cmd] Nagioos command pipe])
+AC_ARG_VAR(nagioscmdpipe,  [[/var/spool/nagios/cmd/nagios.cmd] Nagios command pipe])
 if test -z "$nagioscmdpipe"; then
    nagioscmdpipe='/var/spool/nagios/cmd/nagios.cmd'; fi
 
