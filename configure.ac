@@ -27,30 +27,23 @@ if test "x$RMDIR" = "x"; then
 fi
 
 
-AC_ARG_ENABLE(pkgonly,
-        [AS_HELP_STRING([--enable-pkgonly],
-                        [Skip checks for Perl dependencies (for packaging purposes)])])
-AC_SUBST(enable_pkgonly)
-
-# Check for the presence of necessary Perl modules
-if test "$enable_pkgonly" != yes; then
-   for module in        \
-      'Crypt::DES'      \
-      'Digest::HMAC'    \
-      'Digest::SHA1'    \
-      'Math::RPN'       \
-      'Nagios::Cmd'     \
-      'Nagios::Plugin'  \
-      'Net::SNMP'
-   do
-     AC_MSG_CHECKING([for Perl module $module])
-     if ${PERL} -e 'use '$module 2>/dev/null; then
-         AC_MSG_RESULT([Ok])
-     else
-         AC_MSG_ERROR([Perl cannot find $module]);
-     fi
-   done
-fi
+# Check that the dependencies are installed
+for module in       \
+  'Crypt::DES'      \
+  'Digest::HMAC'    \
+  'Digest::SHA1'    \
+  'Math::RPN'       \
+  'Nagios::Cmd'     \
+  'Nagios::Plugin'  \
+  'Net::SNMP'
+do
+  AC_MSG_CHECKING([for Perl module $module])
+  if ${PERL} -e 'use '$module 2>/dev/null; then
+    AC_MSG_RESULT([Ok])
+  else
+    AC_MSG_ERROR([Perl cannot find $module]);
+  fi
+done
 
 
 AC_ARG_VAR(nagiospluginsconfdir,  [[SYSCONFDIR/nagios/plugins.d] Nagios plugins configuration directory])
