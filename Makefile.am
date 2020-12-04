@@ -19,7 +19,7 @@ general.conf: general.conf.in Makefile
 	$(TOUCH) --reference=$< $@
 
 vigilo-collector.cfg: vigilo-collector.cfg.in Makefile
-	$(SED) -e 's,@PLUGINDIR[@],$(nagiospluginsconfdir),g' $< > $@
+	$(SED) -e 's,@PLUGINDIR[@],$(nagiospluginsdir),g' $< > $@
 	$(TOUCH) --reference=$< $@
 
 Collector.1: Collector
