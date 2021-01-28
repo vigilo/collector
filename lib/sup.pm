@@ -4,7 +4,7 @@
 ## sup.pm : PERL function package, Customizable supervision functions for the
 ##          Collector Nagios Plugin
 ##
-## Copyright (C) 2006-2020 CS GROUP - France
+## Copyright (C) 2006-2021 CS GROUP - France
 ##
 ## This program is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License
