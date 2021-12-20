@@ -28,13 +28,13 @@ fi
 
 
 # Check that the dependencies are installed
-for module in       \
-  'Crypt::DES'      \
-  'Digest::HMAC'    \
-  'Digest::SHA1'    \
-  'Math::RPN'       \
-  'Nagios::Cmd'     \
-  'Nagios::Plugin'  \
+for module in          \
+  'Crypt::DES'         \
+  'Digest::HMAC'       \
+  'Digest::SHA1'       \
+  'Math::RPN'          \
+  'Nagios::Cmd'        \
+  'Monitoring::Plugin' \
   'Net::SNMP'
 do
   AC_MSG_CHECKING([for Perl module $module])

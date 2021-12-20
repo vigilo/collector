@@ -184,7 +184,7 @@ package collector;
 
 use POSIX;
 use strict;
-use Nagios::Plugin qw(%ERRORS);
+use Monitoring::Plugin qw(%ERRORS);
 use Net::SNMP;
 use Data::Dumper;
 

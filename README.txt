@@ -15,17 +15,14 @@ Collector est un composant de Vigilo_.
 
 Dépendances
 -----------
-Collector nécessite le fichier ``/usr/lib(64)/nagios/plugins/utils.pm``,
-fourni dans le paquet ``nagios-plugins-perl`` sur Red Hat et dans le paquet
-``nagios-plugins`` sur Mandriva.
+Collector nécessite Nagios_, ainsi que les modules Perl (v5.x) suivants:
 
-Il nécessite aussi Nagios_, et les modules Perl (v5.x) suivants:
-
-- ``Net::SNMP``
 - ``Crypt::DES``
 - ``Digest::HMAC``
 - ``Digest::SHA1``
+- ``Monitoring::Plugin``
 - ``Nagios::Cmd``
+- ``Net::SNMP``
 
 
 Installation
